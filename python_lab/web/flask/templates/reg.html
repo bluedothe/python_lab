@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册信息</title>
+</head>
+
+<h1>注册信息：</h1>
+<form action="/get_data" method="get">
+    <table>
+        <tr>
+            <td>用户名：</td><td><input type="text" name="username"></td>
+        </tr>
+        <tr>
+            <td>邮箱：</td><td><input type="email" name="email"></td>
+        </tr>
+        <tr>
+            <td>学历：</td>
+            <td>
+                <select name="edu" id="edu">
+                    <option value="3">本科</option>
+                    <option value="2">专科</option>
+                    <option value="1">高中</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td></td><td><input type="submit" value="提交"></input><input type="reset" value="重置"></input></td>
+        </tr>
+    </table>
+
+</form>
+</body>
+</html>
