@@ -46,5 +46,8 @@ def get_data(url):
     print('=======下载结束=========')
 
 if __name__ == '__main__':
-    url = "http://bbs.tianya.cn/post-stocks-2163387-1.shtml"
+    url = "http://bbs.tianya.cn/post-stocks-2163387-1.shtml"  #[股市论谈]大户日记&SNIPER超级证券博弈系统实战分享&账户诊断
+    url = "http://bbs.tianya.cn/post-stocks-2168836-1.shtml"  #	萧九成:将低吸进行到底【3月号】
+    url = "http://bbs.tianya.cn/post-stocks-2168664-3.shtml"   #走过山丘2019:股市菜鸟炒越秀金控续一
+    url = "http://bbs.tianya.cn/post-stocks-2168053-1.shtml"   #年鱼溪:机构内参操盘计划 每日开盘前奉送一股 今买明卖 买入必涨
     get_data(url)
