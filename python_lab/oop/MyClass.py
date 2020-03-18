@@ -8,6 +8,8 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
+
+
 class MyClass:
     name =""
     age = 18
@@ -15,17 +17,24 @@ class MyClass:
     def welcome(self):
         return "Hello World!"
 
+class Flower:
+    da = MyClass()
+    da.name
+
 class Animal:
     name = ""
     leg = 4
     canFly = False
     canRun = True
     canSwime = False
+    da = MyClass()
 
     def __init__(self,name,leg):
         self.name = name
         self.leg = leg
         self.color = "black"
+        self.da.name
+
 
     def run(self):
         pass

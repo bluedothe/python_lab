@@ -6,17 +6,73 @@
     date: 2020/3/8
     爬取选股宝网站数据
     教程地址：https://blog.csdn.net/xy229935/article/details/90019252
+    案例地址："https://xuangubao.cn
+    问题：selenium弹窗口处理有问题
 '''
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
+
 from selenium import webdriver
 from bs4 import BeautifulSoup
 from _datetime import datetime
-import common.datetime_oper as do
 import os
 import shutil
 import time
 import csv
+
+class FuPanData:
+    xgb_id = "13693625348"
+    xgb_pwd = ""
+    def __init__(self,date, up, down, limitUp, limitDown,bomb,ban1, ban2, ban3, ban4, ban5,ban6,ban7, ban8, ban9, ban10, ban10s):
+        self.date = date
+        self.up = up
+        self.down = down
+        self.limitUp = limitUp
+        self.limitDown = limitDown
+        self.bomb = bomb
+        self.ban1 = ban1
+        self.ban2 = ban2
+        self.ban3 = ban3
+        self.ban4 = ban4
+        self.ban5 = ban5
+        self.ban6 = ban6
+        self.ban7 = ban7
+        self.ban8 = ban8
+        self.ban9 = ban9
+        self.ban10 = ban10
+        self.ban10s = ban10s
+
+    def StockData(self, name, code, reason, sealdate, level):
+        pass
+
+    def get_fupandata(self,date):
+        pass
+
+    def getdatelist(self, year, month, day=1):
+        date_list = []
+        # begin_date = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+        begin_date = datetime.datetime.strftime(datetime.datetime(year, month, day), "%Y-%m-%d")
+        # begin_date = datetime.datetime(2020, 2, 1)
+        begin_date = datetime.datetime.strptime(begin_date, "%Y-%m-%d")
+        if year == datetime.date.today().year and month == datetime.date.today().month:
+            end_date = datetime.datetime.strptime(time.strftime('%Y-%m-%d', time.localtime(time.time())), "%Y-%m-%d")
+        else:
+            end_date = last_day_of_month(begin_date)
+        while begin_date <= end_date:
+            date_str = begin_date.strftime("%Y-%m-%d")
+            date_list.append(date_str)
+            begin_date += datetime.timedelta(days=1)
+        #print(date_list)
+        return date_list
+
+def last_day_of_month(any_day):
+    """
+    获取获得一个月中的最后一天
+    :param any_day: 任意日期
+    :return: string
+    """
+    next_month = any_day.replace(day=28) + datetime.timedelta(days=4)  # this will never fail
+    return next_month - datetime.timedelta(days=next_month.day)
 
 class XuanGuBao():
     # 创建"agudata"，复盘数据表"dapan.csv"
@@ -29,7 +85,7 @@ class XuanGuBao():
     browser = webdriver.Chrome()
     page = browser.page_source  # 得到页面源码
     soup = BeautifulSoup(page, "lxml")
-
+    data = FuPanData(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
     #################################################
     # 创建目录和复盘数据文件
     def create_path(self):
@@ -57,9 +113,9 @@ class XuanGuBao():
         # 二、点击登录链接
         time.sleep(1)
         loginid = self.browser.find_element_by_css_selector(".login-phone-input");
-        loginid.send_keys(data.xgb_id)
+        loginid.send_keys(self.data.xgb_id)
         loginpwd = self.browser.find_element_by_css_selector(".login-setpwd-input")
-        loginpwd.send_keys(data.xgb_pwd)
+        loginpwd.send_keys(self.data.xgb_pwd)
         loginbtn = self.browser.find_element_by_css_selector(".login-btn")
         loginbtn.click()
         # 三、登录后等1秒
@@ -76,7 +132,7 @@ class XuanGuBao():
         limitUp = spans[6].get_text().strip()  # 涨停
         limitDown = spans[7].get_text().strip()  # 跌停
         bomb = spans[8].get_text().strip()  # 炸板率
-        return FuPanData(date, up, down, limitUp, limitDown, bomb, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        return self.data.FuPanData(date, up, down, limitUp, limitDown, bomb, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
     # ——————统计每种连板情况的个数——————
     # date: 字符串类型
@@ -130,7 +186,7 @@ class XuanGuBao():
             sealdate = tds[10].get_text().strip()
             level = tds[12].get_text().strip()
             list_count.append(level)  # 将连板数据保存到list
-            stock = StockData(name, code, reason, sealdate, level)  # 创建股票对象
+            stock = self.data.StockData(name, code, reason, sealdate, level)  # 创建股票对象
             # 将个股保存到CSV文件  （如果需要T除首板加上代码：if tds[12].get_text().strip()!="首板"）
             with open(today_path, "a", newline="") as apdFile:
                 w = csv.writer(apdFile)
@@ -199,20 +255,20 @@ class XuanGuBao():
     #################################################
     # 下载指定月份的数据
     # start_month: 开始月份，end_month: 结束月份
-    def start(self, start_month, end_month):
+    def start(self, start_year, start_month, end_month):
         self.login()  # 登录
 
         # 创建所有目录，并保存数据
         m = start_month
         while m <= end_month:
             # 修改大盘复盘数据文件名为dapan_年_月.csv
-            datepath = str(datetime.now().date().year) + "_" + str(m);
+            datepath = str(start_year) + "_" + str(m);
             self.dapan_path = "agudata\\" + datepath
             self.dapan = self.dapan_path + "\\dapan_" + datepath + ".csv";
             self.create_path()  # 创建保存数据的目录和文件
 
             # 遍历指定月份的所有日期，如果是当前月份则到当前日期，下载每日数据
-            date_list = do.getdatelist(m)  #类型为list，格式：2019-05-23
+            date_list = self.data.getdatelist(m)
             for date in date_list:
                 xgb.get_fupandata(date)
             print(str(date.month) + "月全部保存成功")
@@ -225,30 +281,8 @@ class XuanGuBao():
         self.browser.quit()  # 关闭浏览器
     #################################################
 
-class FuPanData:
-    def __init__(self,date, up, down, limitUp, limitDown,bomb,ban1, ban2, ban3, ban4, ban5,ban6,ban7, ban8, ban9, ban10, ban10s):
-        self.date = date
-        self.up = up
-        self.down = down
-        self.limitUp = limitUp
-        self.limitDown = limitDown
-        self.bomb = bomb
-        self.ban1 = ban1
-        self.ban2 = ban2
-        self.ban3 = ban3
-        self.ban4 = ban4
-        self.ban5 = ban5
-        self.ban6 = ban6
-        self.ban7 = ban7
-        self.ban8 = ban8
-        self.ban9 = ban9
-        self.ban10 = ban10
-        self.ban10s = ban10s
-
-    def StockData(self):
-        pass
-
 if __name__ == "__main__":
+    year = datetime.now().year
     month = datetime.now().month
     xgb = XuanGuBao()
-    xgb.start(month, month)  # 下载5月的所有数据
+    xgb.start(year,month, month)  # 下载5月的所有数据
