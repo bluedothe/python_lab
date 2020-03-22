@@ -170,4 +170,5 @@ if __name__ == '__main__':
     #get_block_info()
     #read_tdx_file()
     #stock_csv(os.getcwd() + "/tdx_file/sz000001.day","sz000001-2.csv")
-    get_block_info2()
+    #get_block_info2()
+    get_kline_data()

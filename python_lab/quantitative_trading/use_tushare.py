@@ -21,13 +21,8 @@ __copyright__ = "Copyright 2018-2020"
 token = 'b5f94a8161ede1ba5b20b62c133d866ccfebcb2ce314489d6447f948'
 
 # 设置tushare pro的token并获取连接
-#ts.set_token(token)    #改语句可以省略，直接将token作为pro_api的参数即可
+#ts.set_token(token)    #该语句可以省略，直接将token作为pro_api的参数即可
 pro = ts.pro_api(token)
-
-def get_data():
-    #df = pro.trade_cal(exchange='', start_date='20180901', end_date='20181001', fields='exchange,cal_date,is_open,pretrade_date', is_open='0')
-    df = pro.query('trade_cal', exchange='', start_date='20180901', end_date='20181001', fields='exchange,cal_date,is_open,pretrade_date', is_open='0')
-    print(df)
 
 def get_kdata():
     # 设定获取日线行情的初始日期和终止日期，其中终止日期设定为昨天。
@@ -122,11 +117,102 @@ def write2db(timest, file_name):
         cursor.close()
         db.close()
 
-
 def get_version():
     print(ts.__version__)
+
+#基础数据：获取股票列表
+def get_stock_basic():
+    #data = pro.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
+    data = pro.query('stock_basic', exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs')
+    print(data)
+
+#基础数据：交易日历
+def get_trade_cal():
+    #data = pro.trade_cal(exchange='', start_date='20180101', end_date='20181231')
+    data = pro.query('trade_cal', start_date='20180101', end_date='20181231',fields='exchange,cal_date,is_open,pretrade_date')
+    print(data)
+
+#基础数据：股票曾用名
+def get_namechange():
+    data = pro.namechange(ts_code='600848.SH', fields='ts_code,name,start_date,end_date,change_reason')
+    print(data)
+
+#基础数据：上市公司基本信息
+def get_stock_company():
+    #data = pro.stock_company(exchange='SZSE', fields='ts_code,chairman,manager,secretary,reg_capital,setup_date,province,introduction,employees,main_business,business_scope')
+    data = pro.stock_company(exchange='SSE', fields='ts_code,chairman,manager,secretary,reg_capital,setup_date,province,introduction,employees,main_business,business_scope')
+    print(data)
+
+#行情数据：日线行情
+#数据说明：交易日每天15点～16点之间。本接口是未复权行情，停牌期间不提供数据.或通过通用行情接口获取数据，包含了前后复权数据
+#调取说明：基础积分每分钟内最多调取500次，每次5000条数据，相当于23年历史，用户获得超过5000积分正常调取无频次限制。
+#日期都填YYYYMMDD格式，比如20181010
+def get_daily():
+    #data = pro.daily(ts_code='000001.SZ,600000.SH', start_date='20180701', end_date='20180718')
+    data = pro.query('daily', ts_code='000001.SZ', start_date='20180701', end_date='20180718')
+    #data = pro.daily(trade_date='20180810')
+    print(data)
+
+#行情数据：停复牌信息
+def get_suspend():
+    data = pro.query('suspend', ts_code='', suspend_date='20180720', resume_date='', fields='')
+    print(data)
+
+#行情数据：每日停复牌信息
+def get_suspend_d():
+    data = pro.suspend_d(suspend_type='S', trade_date='20200312')
+    print(data)
+
+#行情数据：每日指标
+#更新时间：交易日每日15点～17点之间
+#描述：获取全部股票每日重要的基本面指标，可用于选股分析、报表展示等。
+#日期都填YYYYMMDD格式，比如20181010
+#积分：用户需要至少300积分才可以调取
+def get_daily_basic():
+    data = pro.query('daily_basic', ts_code='', trade_date='20180726',fields='ts_code,trade_date,turnover_rate,volume_ratio,pe,pb')
+    print(data)
+
+#行情数据：通用行情接口
+#更新时间：股票和指数通常在15点～17点之间
+#由于本接口是集成接口，在SDK层做了一些逻辑处理，目前暂时没法用http的方式调取通用行情接口。用户可以访问Tushare的Github，查看源代码完成类似功能。
+
+#行情数据：沪深股通十大成交股
+def get_hsgt_top10():
+    #data = pro.query('hsgt_top10', ts_code='600519.SH', start_date='20180701', end_date='20180725')
+    data = pro.hsgt_top10(trade_date='20180725', market_type='1')
+    print(data)
+
+#股票分类
+def get_industry():
+    #data = ts.get_industry_classified()   #行业分类
+    #data = ts.get_concept_classified()        #概念分类
+    #data = ts.get_area_classified()        #地域分类
+    #data = ts.get_sme_classified()        #获取中小板股票数据，即查找所有002开头的股票
+    #data = ts.get_gem_classified()        #获取创业板股票数据，即查找所有300开头的股票
+    #data = ts.get_st_classified()        #获取风险警示板股票数据，即查找所有st股票
+    #data = ts.get_hs300s()        #获取沪深300当前成份股及所占权重
+    #data = ts.get_sz50s()        #获取上证50成份股
+    #data = ts.get_zz500s()        #获取中证500成份股
+    #data = ts.get_terminated()        #获取已经被终止上市的股票列表，数据从上交所获取，目前只有在上海证券交易所交易被终止的股票。
+    data = ts.get_suspended()        #获取被暂停上市的股票列表，数据从上交所获取，目前只有在上海证券交易所交易被终止的股票。
+    print(data)
+
+def test():
+    data = ts.get_h_data('002337', start='2015-01-01', end='2015-03-16')  # 两个日期之间的前复权数据
+    print(data)
 
 if __name__ == '__main__':
     #get_version()
     #get_kdata()
-    write2csv()
+    #write2csv()
+    #get_stock_basic()
+    #get_trade_cal()
+    #get_namechange()
+    #get_stock_company()
+    #get_daily()
+    #get_suspend()
+    #get_suspend_d()
+    #get_daily_basic()
+    #get_hsgt_top10()
+    #get_industry()
+    test()
