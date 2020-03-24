@@ -13,8 +13,15 @@ from struct import unpack
 import datetime
 import time
 import re
+import random
+import logging
+import pprint
+import pandas as pd
 from pytdx.hq import TdxHq_API,TDXParams
+from pytdx.exhq import TdxExHq_API
 from pytdx.reader import TdxDailyBarReader, TdxFileNotFoundException,BlockReader
+from pytdx.pool.ippool import AvailableIPPool
+from pytdx.config.hosts import hq_hosts
 
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
@@ -84,8 +91,65 @@ def stock_csv(filepath, name):
             file_object.writelines(list)
         file_object.close()
 
+#读取通达信软件下载的板块数据文件
+def get_block_info2():
+    # 默认扁平格式
+    df = BlockReader().get_df(".../T0002/hq_cache/block_zs.dat")
+    print(df)
 
+#通过读取通达信的软件本地目录导出的数据
+def read_tdx_file():
+    source = os.getcwd() + "/tdx_file/"
+    reader = TdxDailyBarReader()
+    df = reader.get_df(source + "sz000001.day")
+    print(df)
+    df.to_csv(source + "/sz000001.csv")
 
+def test():
+    source = os.getcwd() + "/tdx_file/"
+    target = os.getcwd() + "/tdx_file/"
+    file_list = os.listdir(source)
+    for f in file_list:
+        day2csv(source, f, target)
+
+#解析通达信的day文件
+#调用方法：print(exactStock(os.getcwd() + "/tdx_file/sz000001.day","000001"))
+def exactStock(fileName, code):
+    ofile = open(fileName,'rb')
+    buf=ofile.read()
+    ofile.close()
+    num=len(buf)
+    no=num/32
+    b=0
+    e=32
+    items = list()
+    for i in range(int(no)):
+        a=unpack('IIIIIfII',buf[b:e])
+        year = int(a[0]/10000); m = int((a[0]%10000)/100); month = str(m);
+        if m <10 :
+            month = "0" + month;
+        d = (a[0]%10000)%100; day=str(d);
+        if d< 10 :
+            day = "0" + str(d);
+        dd = str(year)+"-"+month+"-"+day
+        openPrice = a[1]/100.0
+        high = a[2]/100.0
+        low =  a[3]/100.0
+        close = a[4]/100.0
+        amount = a[5]/10.0
+        vol = a[6]
+        unused = a[7]
+        if i == 0 :
+            preClose = close
+            ratio = round((close - preClose)/preClose*100, 2)
+            preClose = close
+        item=[code, dd, str(openPrice), str(high), str(low), str(close), str(ratio), str(amount), str(vol)]
+        items.append(item)
+        b=b+32
+        e=e+32
+    return items
+
+#--------------------------------------
 #通过pytdx工具在线获取k线数据
 """
 category,K线种类
@@ -134,32 +198,45 @@ BLOCK_DEFAULT = "block.dat"""""
 def get_block_info():
     api = TdxHq_API()
     if api.connect('119.147.212.81', 7709):
-        print(api.get_and_parse_block_info("block.dat"))  #一般板块
-        print(api.get_and_parse_block_info("block_zs.dat"))  #指数板块
-        print(api.get_and_parse_block_info("block_fg.dat"))  #风格板块
-        print(api.get_and_parse_block_info("block_gn.dat"))  #概念板块
+        data = print(api.get_and_parse_block_info("block.dat"))  #一般板块
+        #print(api.get_and_parse_block_info("block_zs.dat"))  #指数板块
+        #print(api.get_and_parse_block_info("block_fg.dat"))  #风格板块
+        #print(api.get_and_parse_block_info("block_gn.dat"))  #概念板块
+        datadf = api.to_df(data)
+        print(datadf)
+
         api.disconnect()
 
-#读取通达信软件下载的板块数据文件
-def get_block_info2():
-    # 默认扁平格式
-    df = BlockReader().get_df(".../T0002/hq_cache/block_zs.dat")
-    print(df)
+def get_instrument_info():
+    api = TdxExHq_API(heartbeat=True)
+    host = "180.153.18.176" #通信达的api地址
+    port = 7721 #通信达的连接端口
+    #开始连接通信达服务器
+    api.connect(host, port)
+    insts = []
+    count = 500
+    curr_index = 0
+    while (True) :
+        insts_tmp = api.get_instrument_info(curr_index, count)
+        if insts_tmp is None:
+            break
+        insts.extend(insts_tmp)
+        curr_index = curr_index + len(insts_tmp)
+        if len(insts_tmp) < count:
+            break
+    #查看通信达提供的市场列表
+    #print api.to_df(api.get_markets())
+    df_inst = api.to_df(insts)
+    #这里笔者选择的美国知名公司列表, 所以market = 41
+    df_inst[df_inst['market'] == 41]
+    #这里教程获取AAPL单一数据，如果需要全部数据可以使用列表循环下载整个数据
+    #笔者获取的是苹果公司最近300天交易日行情Day版
+    his_kline = api.get_instrument_bars(TDXParams.KLINE_TYPE_DAILY, 41, "AAPL", 0, 300)
+    datadf = api.to_df(his_kline)
+    #保存为csv格式,命名为APPL-demo/按照逗号分隔
+    datadf.to_csv(os.getcwd() + "/tdx_file/" + 'APPL-demo.csv',index=False,sep=',')
 
-#通过读取通达信的软件本地目录导出的数据
-def read_tdx_file():
-    source = os.getcwd() + "/tdx_file/"
-    reader = TdxDailyBarReader()
-    df = reader.get_df(source + "sz000001.day")
-    print(df)
-    df.to_csv(source + "/sz000001.csv")
-
-def test():
-    source = os.getcwd() + "/tdx_file/"
-    target = os.getcwd() + "/tdx_file/"
-    file_list = os.listdir(source)
-    for f in file_list:
-        day2csv(source, f, target)
+#------------------------------------------------------
 
 
 if __name__ == '__main__':
@@ -170,5 +247,7 @@ if __name__ == '__main__':
     #get_block_info()
     #read_tdx_file()
     #stock_csv(os.getcwd() + "/tdx_file/sz000001.day","sz000001-2.csv")
-    #get_block_info2()
-    get_kline_data()
+    get_block_info()
+    #get_kline_data()
+    #print(exactStock(os.getcwd() + "/tdx_file/sz000001.day","000001"))
+    #get_instrument_info()
