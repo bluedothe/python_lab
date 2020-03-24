@@ -17,7 +17,12 @@ def test1():
     dblist = client.list_database_names()
     for db_name in dblist:
         print(f"数据库名字：{db_name}")
-
+    db = client["stockCommonDbTuShare"]
+    doc = db["codeTableTuShare"]
+    x = doc.find_one()
+    print(x)
+    for y in doc.find():
+        print(y)
 
 if __name__ == '__main__':
     test1()
