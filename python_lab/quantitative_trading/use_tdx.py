@@ -198,7 +198,7 @@ BLOCK_DEFAULT = "block.dat"""""
 def get_block_info():
     api = TdxHq_API()
     if api.connect('119.147.212.81', 7709):
-        data = print(api.get_and_parse_block_info("block.dat"))  #一般板块
+        data = api.get_and_parse_block_info("block.dat")  #一般板块
         #print(api.get_and_parse_block_info("block_zs.dat"))  #指数板块
         #print(api.get_and_parse_block_info("block_fg.dat"))  #风格板块
         #print(api.get_and_parse_block_info("block_gn.dat"))  #概念板块
