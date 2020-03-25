@@ -178,7 +178,7 @@ def get_stock_count():
         print(api.get_security_count(0))    #参数为市场代码
         print(api.get_security_list(0, 0))   #第一个参数为市场代码，第二个参数为起始位置
         print(api.get_security_count(1))
-        print(api.get_security_list(1, 0))
+        print(api.to_df(api.get_security_list(1, 0)))
         api.disconnect()
 
 #查询公司信息目录
@@ -242,12 +242,12 @@ def get_instrument_info():
 if __name__ == '__main__':
     #test()
     #get_kline_data()
-    #get_stock_count()
+    get_stock_count()
     #get_company_info()
     #get_block_info()
     #read_tdx_file()
     #stock_csv(os.getcwd() + "/tdx_file/sz000001.day","sz000001-2.csv")
-    get_block_info()
+    #get_block_info()
     #get_kline_data()
     #print(exactStock(os.getcwd() + "/tdx_file/sz000001.day","000001"))
     #get_instrument_info()
