@@ -6,6 +6,8 @@
     date: 2020/2/12
     tushare测试
     官方参考文档
+    tusharePro接口：https://tushare.pro/document/2?doc_id=27
+    tushare接口：http://tushare.org/classifying.html#id2
 '''
 
 import tushare as ts
@@ -205,7 +207,7 @@ if __name__ == '__main__':
     #get_version()
     #get_kdata()
     #write2csv()
-    #get_stock_basic()
+    get_stock_basic()
     #get_trade_cal()
     #get_namechange()
     #get_stock_company()
@@ -215,4 +217,4 @@ if __name__ == '__main__':
     #get_daily_basic()
     #get_hsgt_top10()
     #get_industry()
-    test()
+    #test()
