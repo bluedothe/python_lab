@@ -23,6 +23,10 @@ def test1():
     print(x)
     for y in doc.find():
         print(y)
+    arr = [];
+    for i in range(200):
+        arr.push({"num": i})
+    db.numbers.insert(arr)
 
 if __name__ == '__main__':
     test1()
