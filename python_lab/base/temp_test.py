@@ -68,5 +68,10 @@ def last_day_of_month(any_day):
     next_month = any_day.replace(day=28) + datetime.timedelta(days=4)  # this will never fail
     return next_month - datetime.timedelta(days=next_month.day)
 
+def string_format(self):
+    paras = {"host":"localhost", "user":"root", "passwd":"root123", "dbname":"stock"}
+    str = 'mysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**paras)
+    print(str)
+
 if __name__ == '__main__':
     test3(2020, 1, 1)

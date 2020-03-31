@@ -30,6 +30,7 @@ class mysqlHelper:
             cursor.execute(sql)
             # 获取所有记录列表
             results = cursor.fetchall()
+            print("执行SQL成功, sql: " + sql)
             # for row in results:
             #     ipurl = row[1]
             #     state = row[2]
@@ -54,6 +55,7 @@ class mysqlHelper:
             cursor.execute(sql)
             # 提交到数据库
             db.commit()
+            print("执行SQL成功, sql: " + sql)
         except:
             db.rollback()
             print("执行SQL出错, sql: " + sql)
