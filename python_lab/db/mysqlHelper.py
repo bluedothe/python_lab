@@ -38,13 +38,18 @@ class mysqlHelper:
             #     print("地址：{0:24}{1}".format(ipurl,state))
         except:
             print("执行SQL出错, sql: " + sql)
+        # 关闭游标
+        cursor.close()
         # 关闭连接
         db.close()
         return results
 
 
     # 执行添加、删除和更新
-    def exec(self, sql):
+    # 有data参数则会执行批量操作，这时sql参数格式为：'insert into '表名'(字段名) values(%s,%s,%s,%s)'，
+    # data参数的格式为数组或元组内套元组：[(),(),()]或((),(),())
+    # data的生成方法：data = [],data.append(('需要插入的字段对应的value'))  这里注意要用两个括号扩起来
+    def exec(self, sql, *data):
         # 打开数据库连接
         db = pymysql.connect(self.host, self.username, self.password, self.dbname)
         # 创建一个游标
@@ -52,13 +57,18 @@ class mysqlHelper:
         # 执行
         try:
             # 执行SQL语句
-            cursor.execute(sql)
+            if data == ():
+                cursor.execute(sql)
+            else:
+                cursor.executemany(sql,data)
             # 提交到数据库
             db.commit()
             print("执行SQL成功, sql: " + sql)
         except:
             db.rollback()
             print("执行SQL出错, sql: " + sql)
+        # 关闭游标
+        cursor.close()
         # 关闭连接
         db.close()
 

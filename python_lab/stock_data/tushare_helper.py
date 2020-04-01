@@ -12,15 +12,41 @@ import pandas as pd
 import tushare as ts
 import datetime
 import time
+from sqlalchemy import create_engine
+from sqlalchemy.types import NVARCHAR, Float, Integer
+
+from db.mysqlHelper import mysqlHelper
 from stock_data import bluedothe
 
 class TushareHelper:
     def __init__(self):
         self.pro = ts.pro_api(bluedothe.tushare_token)
-        # 显示所有列
-        pd.set_option('display.max_columns', None)
-        # 显示所有行
-        pd.set_option('display.max_rows', None)
+
+        # pandas数据显示设置
+        pd.set_option('display.max_columns', None)  # 显示所有列
+        pd.set_option('display.max_rows', None)  # 显示所有行
+
+        # mysql对象
+        self.mysql = mysqlHelper(bluedothe.mysql_host, bluedothe.mysql_username, bluedothe.mysql_password,
+                                 bluedothe.mysql_dbname)
+
+        # pandas的mysql对象
+        db_paras = {"host": bluedothe.mysql_host, "user": bluedothe.mysql_username, "passwd": bluedothe.mysql_password,
+                    "dbname": bluedothe.mysql_dbname}
+        self.engine = create_engine('mysql+pymysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**db_paras))
+
+    #将pandas.DataFrame中列名和预指定的类型映射
+    # 此方法对VARCHAR的长度不能灵活定义，不具体通用性
+    def mapping_df_types(df):
+        dtypedict = {}
+        for i, j in zip(df.columns, df.dtypes):
+            if "object" in str(j):
+                dtypedict.update({i: NVARCHAR(length=255)})
+            if "float" in str(j):
+                dtypedict.update({i: Float(precision=2, asdecimal=True)})
+            if "int" in str(j):
+                dtypedict.update({i: Integer()})
+        return dtypedict
 
     # 基础数据：获取股票列表
     def get_stock_basic(self):
@@ -29,6 +55,32 @@ class TushareHelper:
                          fields='ts_code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs')
         #print(data)
         return data
+
+    #通过pandas入库
+    def stock_basic_mysql(self):
+        df = self.get_stock_basic()
+        dtypedict = {
+            'str': NVARCHAR(length=255),
+            'int': Integer(),
+            'float': Float(),
+            'code': NVARCHAR(length=16), 'symbol': NVARCHAR(length=16), 'name': NVARCHAR(length=16), 'area': NVARCHAR(length=16), 'industry': NVARCHAR(length=16), 'fullname': NVARCHAR(length=16), 'enname': NVARCHAR(length=16), 'market': NVARCHAR(length=16), 'exchange': NVARCHAR(length=16), 'curr_type': NVARCHAR(length=16), 'list_date': NVARCHAR(length=16), 'delist_date': NVARCHAR(length=16), 'is_hs': NVARCHAR(length=16), 'create_time': NVARCHAR(length=16), 'update_time': NVARCHAR(length=255)
+        }
+        # dtypedict =self.mapping_df_types(df)   #此方法对VARCHAR的长度不能灵活定义，不具体通用性
+        # df.to_sql('stock_basic_pd', self.engine)    # 存入数据库
+        df.to_sql('stock_basic_pd', self.engine, if_exists='append', index=False, dtype=dtypedict)   # 追加数据到现有表
+
+    #手工入库
+    def stock_basic_mysql2(self):
+        df = self.get_stock_basic()
+        cur_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        sql = "INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time) VALUES('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"
+        for index, row in df.iterrows():
+            self.mysql.exec(
+                sql.format(row["ts_code"], row["symbol"], row["name"], row["area"], row["industry"], row["fullname"],
+                           row["enname"], row["market"], row["exchange"], row["curr_type"], row["list_date"],
+                           row["delist_date"], row["is_hs"], cur_time, cur_time))
+            # self.mysql.exec("INSERT INTO stock_basic('code','symbol','name','area','industry','fullname','enname','market','exchange','curr_type','list_date','delist_date','is_hs','create_time','update_time') VALUES(row['ts_code'],row['symbol'],row['name'],row['area'],row['industry'],row['fullname'],row['enname'],row['market'],row['exchange'],row['curr_type'],row['list_date'],row['delist_date'],row['is_hs'],datetime.now(),datetime.now())")
+            print("已完成插入{}条数据".format(index))
 
     # 基础数据：交易日历
     # 1990年12月19日 上海证券交易所开市交易

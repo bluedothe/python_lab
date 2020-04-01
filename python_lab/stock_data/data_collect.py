@@ -20,23 +20,24 @@ from stock_data.tushare_helper import TushareHelper
 
 class DataCollect:
     def __init__(self):
-        # 显示所有列
-        pd.set_option('display.max_columns', None)
-        # 显示所有行
-        pd.set_option('display.max_rows', None)
-        self.mysql = mysqlHelper(bluedothe.mysql_host, bluedothe.mysql_username, bluedothe.mysql_password, bluedothe.mysql_dbname)
-        db_paras = {"host": bluedothe.mysql_host, "user": bluedothe.mysql_username, "passwd": bluedothe.mysql_password,
-                    "dbname": bluedothe.mysql_dbname}
-        self.engine = create_engine('mysql+pymysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**db_paras))
+        #pandas数据显示设置
+        pd.set_option('display.max_columns', None)  # 显示所有列
+        pd.set_option('display.max_rows', None)   # 显示所有行
+
+        #tushare对象
         self.tshelper = TushareHelper()
 
     def get_stock_basic(self):
         df = self.tshelper.get_stock_basic()
 
-        # 存入数据库
-        #df.to_sql('stock_basic_pd', self.engine)
-        # 追加数据到现有表
-        #df.to_sql('stock_basic_pd', self.engine, if_exists='append')
+        """
+           if_exists：（fail，replace，append）
+             fail：如果表存在，则不进行操作
+             replace：如果表存在就删除表，重新生成，插入数据
+             append：如果表存在就插入数据，不存在就直接生成表
+           """
+        # df.to_sql('stock_basic_pd', self.engine)    # 存入数据库
+        #df.to_sql('stock_basic_pd', self.engine, if_exists='append')   # 追加数据到现有表
 
         cur_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         sql = "INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time) VALUES('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"

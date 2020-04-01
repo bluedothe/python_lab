@@ -10,6 +10,7 @@ __copyright__ = "Copyright 2018-2020"
 
 import datetime
 import time
+from tool.printHelper import time_this_function
 
 def test1():
     str = "abvcelsdss"
@@ -39,6 +40,7 @@ def getBetweenDay(begin_date):
         begin_date += datetime.timedelta(days=1)
     return date_list
 
+@time_this_function
 def test3(year,month,day):
     date_list = []
     #begin_date = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
