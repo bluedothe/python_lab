@@ -46,10 +46,10 @@ class mysqlHelper:
 
 
     # 执行添加、删除和更新
-    # 有data参数则会执行批量操作，这时sql参数格式为：'insert into '表名'(字段名) values(%s,%s,%s,%s)'，
-    # data参数的格式为数组或元组内套元组：[(),(),()]或((),(),())
-    # data的生成方法：data = [],data.append(('需要插入的字段对应的value'))  这里注意要用两个括号扩起来
-    def exec(self, sql, *data):
+    # 有values参数则会执行批量操作，这时sql参数格式为：'insert into '表名'(字段名) values(%s,%s,%s,%s)'，
+    # values参数的格式为数组或元组内套元组：[(),(),()]或((),(),())
+    # values的生成方法：values = [],values.append(('需要插入的字段对应的value'))  这里注意要用两个括号扩起来
+    def exec(self, sql, *values):
         # 打开数据库连接
         db = pymysql.connect(self.host, self.username, self.password, self.dbname)
         # 创建一个游标
@@ -57,16 +57,19 @@ class mysqlHelper:
         # 执行
         try:
             # 执行SQL语句
-            if data == ():
+            if values == ():
+                print("单条执行")
                 cursor.execute(sql)
             else:
-                cursor.executemany(sql,data)
+                print("批量执行")
+                cursor.executemany(sql,values)
             # 提交到数据库
             db.commit()
             print("执行SQL成功, sql: " + sql)
-        except:
+        except Exception as ex:
             db.rollback()
             print("执行SQL出错, sql: " + sql)
+            print("出现如下异常: %s" % ex)
         # 关闭游标
         cursor.close()
         # 关闭连接

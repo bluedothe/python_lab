@@ -17,6 +17,7 @@ from sqlalchemy.types import NVARCHAR, Float, Integer
 
 from db.mysqlHelper import mysqlHelper
 from stock_data import bluedothe
+from tool import printHelper
 
 class TushareHelper:
     def __init__(self):
@@ -33,7 +34,8 @@ class TushareHelper:
         # pandas的mysql对象
         db_paras = {"host": bluedothe.mysql_host, "user": bluedothe.mysql_username, "passwd": bluedothe.mysql_password,
                     "dbname": bluedothe.mysql_dbname}
-        self.engine = create_engine('mysql+pymysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**db_paras))
+        #self.engine = create_engine('mysql+pymysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**db_paras))
+        self.engine = create_engine(f'mysql+pymysql://{bluedothe.mysql_username}:{bluedothe.mysql_password}@{bluedothe.mysql_host}/{bluedothe.mysql_dbname}?charset=utf8')
 
     #将pandas.DataFrame中列名和预指定的类型映射
     # 此方法对VARCHAR的长度不能灵活定义，不具体通用性
@@ -57,7 +59,7 @@ class TushareHelper:
         return data
 
     #通过pandas入库
-    def stock_basic_mysql(self):
+    def stock_basic_mysql_pandas(self):
         df = self.get_stock_basic()
         dtypedict = {
             'str': NVARCHAR(length=255),
@@ -69,18 +71,30 @@ class TushareHelper:
         # df.to_sql('stock_basic_pd', self.engine)    # 存入数据库
         df.to_sql('stock_basic_pd', self.engine, if_exists='append', index=False, dtype=dtypedict)   # 追加数据到现有表
 
-    #手工入库
-    def stock_basic_mysql2(self):
+    #单条记录入库,存在none值的时候不能拼接字符串
+    def stock_basic_mysql_one(self):
         df = self.get_stock_basic()
         cur_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        sql = "INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time) VALUES('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"
+        sql = "INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time) VALUES" #('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"
+        values = ""
         for index, row in df.iterrows():
-            self.mysql.exec(
-                sql.format(row["ts_code"], row["symbol"], row["name"], row["area"], row["industry"], row["fullname"],
-                           row["enname"], row["market"], row["exchange"], row["curr_type"], row["list_date"],
-                           row["delist_date"], row["is_hs"], cur_time, cur_time))
-            # self.mysql.exec("INSERT INTO stock_basic('code','symbol','name','area','industry','fullname','enname','market','exchange','curr_type','list_date','delist_date','is_hs','create_time','update_time') VALUES(row['ts_code'],row['symbol'],row['name'],row['area'],row['industry'],row['fullname'],row['enname'],row['market'],row['exchange'],row['curr_type'],row['list_date'],row['delist_date'],row['is_hs'],datetime.now(),datetime.now())")
-            print("已完成插入{}条数据".format(index))
+            values.join("(" + row["ts_code"] + "," + row["symbol"] + "," + row["name"] + "," + row["area"] + "," + row["industry"] + "," + row["fullname"] + "," + row["enname"] + "," + row["market"] + "," + \
+                           row["exchange"] + "," + row["curr_type"] + "," + row["list_date"] + "," + row["delist_date"] + "," + row["is_hs"] + "," + cur_time + "," + cur_time + "),")
+        self.mysql.exec(sql.join(values))
+        print("已完成插入{}条数据".format(len(values)))
+
+    # 多条记录批量入库,执行报错：not enough arguments for format string
+    @printHelper.time_this_function
+    def stock_basic_mysql_many(self):
+        df = self.get_stock_basic()
+        cur_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        values = []
+        sql = "INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        for index, row in df.iterrows():
+            values.append((row["ts_code"], row["symbol"], row["name"], row["area"], row["industry"], row["fullname"], row["enname"], row["market"],
+                           row["exchange"], row["curr_type"], row["list_date"], row["delist_date"], row["is_hs"], cur_time, cur_time))
+        self.mysql.exec(sql,values)
+        print("已完成插入{}条数据".format(len(values)))
 
     # 基础数据：交易日历
     # 1990年12月19日 上海证券交易所开市交易
@@ -109,5 +123,6 @@ class TushareHelper:
 if __name__ == '__main__':
     tshelper = TushareHelper()
     #tshelper.get_stock_basic()
-    tshelper.get_trade_cal()
+    #tshelper.get_trade_cal()
     #tshelper.is_trade_day("20200125")
+    tshelper.stock_basic_mysql_many()

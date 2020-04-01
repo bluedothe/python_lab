@@ -27,6 +27,10 @@ class DataCollect:
         #tushare对象
         self.tshelper = TushareHelper()
 
+        # mysql对象
+        self.mysql = mysqlHelper(bluedothe.mysql_host, bluedothe.mysql_username, bluedothe.mysql_password,
+                                 bluedothe.mysql_dbname)
+
     def get_stock_basic(self):
         df = self.tshelper.get_stock_basic()
 
@@ -53,12 +57,20 @@ class DataCollect:
         print(datetime.now())
 
     def test(self):
-        sql="""INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time)
-        VALUES('688399.SH','688399','硕世生物','江苏','医疗保健','江苏硕世生物科技股份有限公司','Jiangsu Bioperfectus Technologies Co., Ltd.','科创板','SSE','CNY','20191205','None','N','2020-03-31 22:53:51','2020-03-31 22:53:51')"""
+        #sql="""INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time)
+        #VALUES('688399.SH','688399','硕世生物','江苏','医疗保健','江苏硕世生物科技股份有限公司','Jiangsu Bioperfectus Technologies Co., Ltd.','科创板','SSE','CNY','20191205','None','N','2020-03-31 22:53:51','2020-03-31 22:53:51')"""
+        values = []
+        #sql = "INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        #values.append(('688399.SH','688399','硕世生物','江苏','医疗保健','江苏硕世生物科技股份有限公司','Jiangsu Bioperfectus Technologies Co., Ltd.','科创板','SSE','CNY','20191205','None','N','2020-03-31','2020-03-31'))
+        #values.append(('688399.SH', '688399', '硕世生物', '江苏', '医疗保健', '江苏硕世生物科技股份有限公司','Jiangsu Bioperfectus Technologies Co., Ltd.', '科创板', 'SSE', 'CNY', '20191205', 'None', 'N','2020-03-31', '2020-03-31'))
+        sql = "INSERT INTO stock_basic(code,symbol,area) VALUES ('688398.SH','688398','硕世生物'),('688398.SH','688398','硕世生物')"
+        values.append(('688398.SH','688398','硕世生物'))
+        values.append(('688399.SH','688399','硕世生物'))
+        print(values)
         self.mysql.exec(sql)
 
 if __name__ == '__main__':
     dc = DataCollect()
-    dc.get_stock_basic()
+    #dc.get_stock_basic()
     #dc.string_format()
-    #dc.test()
+    dc.test()
