@@ -4,6 +4,7 @@
 '''
     module description
     date: 2020/3/28
+    通过tushare接口获取股票数据
 '''
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
@@ -13,10 +14,11 @@ import tushare as ts
 import datetime
 import time
 from sqlalchemy import create_engine
-from sqlalchemy.types import NVARCHAR, Float, Integer
+from sqlalchemy.types import NVARCHAR, Float, Integer, DateTime, BigInteger
 
 from db.mysqlHelper import mysqlHelper
 from stock_data import bluedothe
+from stock_data import config
 from tool import printHelper
 
 class TushareHelper:
@@ -28,14 +30,14 @@ class TushareHelper:
         pd.set_option('display.max_rows', None)  # 显示所有行
 
         # mysql对象
-        self.mysql = mysqlHelper(bluedothe.mysql_host, bluedothe.mysql_username, bluedothe.mysql_password,
-                                 bluedothe.mysql_dbname)
+        self.mysql = mysqlHelper(config.mysql_host, config.mysql_username, bluedothe.mysql_password,
+                                 config.mysql_dbname)
 
         # pandas的mysql对象
-        db_paras = {"host": bluedothe.mysql_host, "user": bluedothe.mysql_username, "passwd": bluedothe.mysql_password,
-                    "dbname": bluedothe.mysql_dbname}
+        db_paras = {"host": config.mysql_host, "user": config.mysql_username, "passwd": bluedothe.mysql_password,
+                    "dbname": config.mysql_dbname}
         #self.engine = create_engine('mysql+pymysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**db_paras))
-        self.engine = create_engine(f'mysql+pymysql://{bluedothe.mysql_username}:{bluedothe.mysql_password}@{bluedothe.mysql_host}/{bluedothe.mysql_dbname}?charset=utf8')
+        self.engine = create_engine(f'mysql+pymysql://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
 
     #将pandas.DataFrame中列名和预指定的类型映射
     # 此方法对VARCHAR的长度不能灵活定义，不具体通用性
@@ -43,57 +45,123 @@ class TushareHelper:
         dtypedict = {}
         for i, j in zip(df.columns, df.dtypes):
             if "object" in str(j):
-                dtypedict.update({i: NVARCHAR(length=255)})
+                dtypedict.update({i: NVARCHAR(length=16)})
             if "float" in str(j):
                 dtypedict.update({i: Float(precision=2, asdecimal=True)})
             if "int" in str(j):
                 dtypedict.update({i: Integer()})
+            if "datetime" in str(j):
+                dtypedict.update({i: DateTime()})
+            if "bool" in str(j):
+                dtypedict.update({i: bool()})
         return dtypedict
 
     # 基础数据：获取股票列表
-    def get_stock_basic(self):
+    def get_stock_basic(self, list_status="L"):
         # data = self.pro.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-        data = self.pro.query('stock_basic', exchange='', list_status='L',
+        data = self.pro.query('stock_basic', exchange='', list_status=list_status,
                          fields='ts_code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs')
         #print(data)
         return data
 
-    #通过pandas入库
-    def stock_basic_mysql_pandas(self):
-        df = self.get_stock_basic()
-        dtypedict = {
-            'str': NVARCHAR(length=255),
-            'int': Integer(),
-            'float': Float(),
-            'code': NVARCHAR(length=16), 'symbol': NVARCHAR(length=16), 'name': NVARCHAR(length=16), 'area': NVARCHAR(length=16), 'industry': NVARCHAR(length=16), 'fullname': NVARCHAR(length=16), 'enname': NVARCHAR(length=16), 'market': NVARCHAR(length=16), 'exchange': NVARCHAR(length=16), 'curr_type': NVARCHAR(length=16), 'list_date': NVARCHAR(length=16), 'delist_date': NVARCHAR(length=16), 'is_hs': NVARCHAR(length=16), 'create_time': NVARCHAR(length=16), 'update_time': NVARCHAR(length=255)
-        }
-        # dtypedict =self.mapping_df_types(df)   #此方法对VARCHAR的长度不能灵活定义，不具体通用性
-        # df.to_sql('stock_basic_pd', self.engine)    # 存入数据库
-        df.to_sql('stock_basic_pd', self.engine, if_exists='append', index=False, dtype=dtypedict)   # 追加数据到现有表
+    """
+       if_exists：（fail，replace，append）
+         fail：如果表存在，则不进行操作
+         replace：如果表存在就删除表，重新生成，插入数据
+         append：如果表存在就插入数据，不存在就直接生成表
+       """
 
-    #单条记录入库,存在none值的时候不能拼接字符串
-    def stock_basic_mysql_one(self):
-        df = self.get_stock_basic()
+    # 获取股票基本信息，通过pandas入库
+    @printHelper.time_this_function
+    def stock_basic_mysql_pandas(self, list_status="L",if_exists='append'):
         cur_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        sql = "INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time) VALUES" #('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')"
+        df = self.get_stock_basic(list_status)
+        col_name = df.columns.tolist()
+        ##col_name.insert(1, 'id')  #在最前面插入一列id
+        #col_name.insert(col_name.index('ts_code'), 'id')  # 在ts_code列前面插入id,col_name.index('ts_code')+1表示在此列后插入
+        df.reindex(columns=col_name)
+        ##df['id'] = range(1,len(df) + 1)   #不能这样赋值，应该是从数据库中取出最大id后加1
+        df['list_status'] = [list_status] * len(df)  #字段赋值
+        df['create_time'] = [cur_time] * len(df)    #字段赋值
+        df['update_time'] = [cur_time] * len(df)    #字段赋值
+        dtypedict = {
+            'id': BigInteger,'ts_code': NVARCHAR(length=16), 'symbol': NVARCHAR(length=16), 'name': NVARCHAR(length=16), 'area': NVARCHAR(length=16), 'industry': NVARCHAR(length=16), 'fullname': NVARCHAR(length=64), 'enname': NVARCHAR(length=128), 'market': NVARCHAR(length=16), 'exchange': NVARCHAR(length=16), 'curr_type': NVARCHAR(length=16),'list_status': NVARCHAR(length=16), 'list_date': NVARCHAR(length=16), 'delist_date': NVARCHAR(length=16), 'is_hs': NVARCHAR(length=16), 'create_time': DateTime, 'update_time': DateTime
+        }
+        ## dtypedict =self.mapping_df_types(df)   #此方法对VARCHAR的长度不能灵活定义，不具体通用性
+        ##df.to_sql('stock_basic_pd', self.engine, if_exists='append', index=False, dtype=dtypedict)   # 追加数据到现有表
+        pd.io.sql.to_sql(df, 'stock_basic_pd', con=self.engine, if_exists=if_exists, index=False, index_label="symbol", dtype=dtypedict, chunksize = 10000) #chunksize参数针对大批量插入，pandas会自动将数据拆分成chunksize大小的数据块进行批量插入;
+        ##self.engine.connect().execute("ALTER TABLE stock_basic_pd ADD PRIMARY KEY (symbol);") #第一次建表的时候执行，再次执行报错
+
+    #获取股票基本信息，单条记录入库,如果有字段存在none值，转为空字符串
+    @printHelper.time_this_function
+    def stock_basic_mysql_one(self, list_status="L"):
+        df = self.get_stock_basic(list_status)
+        df['list_status'] = [list_status] * len(df)  # 字段赋值
+        df = df.where(df.notnull(), "")
+        cur_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        #sql = "INSERT INTO stock_basic(ts_code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time) VALUES"  #  ON duplicate KEY UPDATE code=values(code)
+        table_name = "stock_basic"
+        column_name = ','.join(df.keys().values) + ",create_time,update_time"
         values = ""
         for index, row in df.iterrows():
-            values.join("(" + row["ts_code"] + "," + row["symbol"] + "," + row["name"] + "," + row["area"] + "," + row["industry"] + "," + row["fullname"] + "," + row["enname"] + "," + row["market"] + "," + \
-                           row["exchange"] + "," + row["curr_type"] + "," + row["list_date"] + "," + row["delist_date"] + "," + row["is_hs"] + "," + cur_time + "," + cur_time + "),")
-        self.mysql.exec(sql.join(values))
-        print("已完成插入{}条数据".format(len(values)))
+            value = "("
+            for record in row.tolist():
+                value = value + '"' + record + '",'
+            value = value + '"' + cur_time + '",'
+            value = value + '"' + cur_time + '",'
+            value = value[0:-1] + "),"
+            values = values + value
+        values = values[0:-1]
+        sql = f"INSERT INTO {table_name} ({column_name}) VALUES{values} ON duplicate KEY UPDATE ts_code=values(ts_code)"  # ON duplicate KEY UPDATE code=values(code)
+        result_num = self.mysql.exec(sql)
+        print("总共{}条数据，成功插入{}条数据".format(len(df),result_num))
 
-    # 多条记录批量入库,执行报错：not enough arguments for format string
+    def joinStr(self,str):
+        if type(str) is None: return ""
+
+    # 获取股票基本信息，多条记录批量入库,执行报错：not enough arguments for format string，原因是没有把传入的数组参数分开，把元组当成一个sql参数了
     @printHelper.time_this_function
-    def stock_basic_mysql_many(self):
+    def stock_basic_mysql_many(self, list_status="L"):
         df = self.get_stock_basic()
+        df['list_status'] = [list_status] * len(df)  # 字段赋值
+        df = df.where(df.notnull(), 'NULL')
         cur_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        dates = [cur_time,cur_time]
         values = []
         sql = "INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         for index, row in df.iterrows():
-            values.append((row["ts_code"], row["symbol"], row["name"], row["area"], row["industry"], row["fullname"], row["enname"], row["market"],
-                           row["exchange"], row["curr_type"], row["list_date"], row["delist_date"], row["is_hs"], cur_time, cur_time))
+            value = [0]
+            value.extend(row.tolist())
+            #value = row.tolist()
+            #value.extend(dates)
+            #print(value)
+            values.append((value))
+            if index == 3: break
+        print(values)
         self.mysql.exec(sql,values)
+        print("已完成插入{}条数据".format(len(values)))
+
+    #测试
+    #执行时抛异常：(1241, 'Operand should contain 1 column(s)')
+    def stock_basic_mysql_many2(self):
+        df = self.get_stock_basic()
+        into = ','.join(df.keys().values)
+        val = ','.join(str(v) for v in df.values)
+        print(into)
+        print(val)
+        df = df.where(df.notnull(), 'NULL')
+        cur_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        dates = [cur_time,cur_time]
+        #values = ('000001.SZ', '000001', '平安银行')
+        #values = (('000001SZ', '000001', '平安银行'),('000002SZ', '000002', '平安银行2'),('000001SZ', '000001', '平安银行'),('000002SZ', '000002', '平安银行2'))
+        sql = """INSERT INTO stock_basic (code,symbol,fullname) VALUES (%s,%s,%s) ON duplicate KEY UPDATE code=values(code)""" #ON duplicate KEY UPDATE code=values(code)
+        #values = (("000001.SZ", "000001", "平安银行"),("000002.SZ", "000002", "平安银行2"),("000003.SZ", "000003", "平安银行3"),("000004.SZ", "000004", "平安银行4"))
+        values = []
+        values.append(('000001.SZ', '000001', '平安银行'))
+        values.append(('000002.SZ', '000002', '平安银行2'))
+        values.append(('000003.SZ' '000003', '平安银行3'))
+        #print(values)
+        #self.mysql.exec(sql,values)
         print("已完成插入{}条数据".format(len(values)))
 
     # 基础数据：交易日历
@@ -120,9 +188,58 @@ class TushareHelper:
             print(my_date,"是交易日")
         return result
 
+    #获取特定一天的全部股票交易数据
+    @printHelper.time_this_function
+    def get_history_day(self,onedate):
+        start_dt = '20200401'
+        time_temp = datetime.datetime.now() - datetime.timedelta(days=1)
+        end_dt = time_temp.strftime('%Y%m%d')
+        end_dt = "20200403"
+        stock_pool = ['600848.SH', '300666.SZ', '300618.SZ', '002049.SZ', '300672.SZ']
+        #df = ts.get_hist_data(code='600848',start="2020-04-01",end="2020-04-03")  # 一次性获取全部日k线数据
+        df = self.pro.query("daily",ts_code=stock_pool[0], start_date=start_dt, end_date=end_dt)
+        print(df)
+
+    #批量格式化日期字段，去掉分隔符
+    def format_date(self,str):
+        return str.replace('-', '')
+
+    #获取特定一支股票的全部交易数据
+    #tushare接口只有2017-10-9以后的数据
+    @printHelper.time_this_function
+    def get_history_phase(self,ts_code):
+        dfpro = self.pro.query("daily", ts_code=ts_code,start_date="20171009")
+        df = ts.get_hist_data(code=ts_code[0:-3], start="2017-10-09")
+        if not dfpro.empty and not df.empty:
+            df.drop(['open','high','low','close'], axis=1, inplace=True)
+            df.rename(index=self.format_date, inplace=True)
+            df['new_date'] = (df.index)
+            dfall = pd.merge(dfpro, df,how='left', left_on='trade_date',right_on='new_date',sort=False,copy=False)
+            dfall.drop('new_date', axis=1, inplace=True)
+            newdf = dfall.sort_values(by ='trade_date', axis=0, ascending=True)
+
+            filename = config.tushare_csv_home + "day/" + ts_code + ".csv"
+            newdf.to_csv(filename, index=False, encoding="utf_8_sig")
+            ## sep='?'使用?分隔需要保存的数据，如果不写，默认是,;na_rep='NA'缺失值保存为NA，如果不写，默认是空;float_format='%.2f',保留两位小数;,header=0不保存列名;,index=0不保存行索引
+            #print(df)
+
+    #通过tusharePro接口获取全部交易数据
+    def get_history_pro(self,ts_code):
+        dfpro = self.pro.query("daily", ts_code=ts_code)
+        if not dfpro.empty:
+            newdf = dfpro.sort_values(by='trade_date', axis=0, ascending=True)
+
+            filename = config.tushare_csv_home + "day_pro/" + ts_code + ".csv"
+            newdf.to_csv(filename, index=False, encoding="utf_8_sig")
+
 if __name__ == '__main__':
     tshelper = TushareHelper()
     #tshelper.get_stock_basic()
     #tshelper.get_trade_cal()
     #tshelper.is_trade_day("20200125")
-    tshelper.stock_basic_mysql_many()
+    #tshelper.stock_basic_mysql_one()
+    #tshelper.stock_basic_mysql_many2()
+    #tshelper.stock_basic_mysql_pandas()
+
+    #tshelper.get_history_day()
+    tshelper.get_history_phase("000003.SZ")

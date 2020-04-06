@@ -4,6 +4,7 @@
 '''
     module description
     date: 2020/3/28
+    通过通达信本地数据获取股票数据
 '''
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"

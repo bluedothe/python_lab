@@ -26,6 +26,10 @@ from pytdx.config.hosts import hq_hosts
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
+#pandas数据显示设置
+pd.set_option('display.max_columns', None)  # 显示所有列
+pd.set_option('display.max_rows', None)   # 显示所有行
+
 
 # 将通达信的日线文件转换成CSV格式
 def day2csv(source_dir, file_name, target_dir):
@@ -242,8 +246,8 @@ def get_instrument_info():
 if __name__ == '__main__':
     #test()
     #get_kline_data()
-    get_stock_count()
-    #get_company_info()
+    #get_stock_count()
+    get_company_info()
     #get_block_info()
     #read_tdx_file()
     #stock_csv(os.getcwd() + "/tdx_file/sz000001.day","sz000001-2.csv")

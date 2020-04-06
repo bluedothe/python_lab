@@ -17,12 +17,12 @@ def test1():
     print(str[5:-3])
 
 def test2():
-    now = datetime.now()
-    print(now)
-    print(now.month)
+    timest = time.strftime("%Y-%m-%d")
+    print(timest)
+    print(timest.month)
     #now.strftime('%Y-%m-%d %H:%M:%S')
-    now.strftime('%Y-%m-%d')
-    print(now.strftime('%Y-%m-%d'))
+    timest.strftime('%Y-%m-%d')
+    print(timest.strftime('%Y-%m-%d'))
 
 
 def monthdays(y, m):
@@ -75,5 +75,13 @@ def string_format(self):
     str = 'mysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**paras)
     print(str)
 
+def test5():
+    time_temp = datetime.datetime.now() - datetime.timedelta(days=1)
+    end_dt = time_temp.strftime('%Y-%m-%d')
+    print(end_dt)
+    date_str = "20200403"
+    mydate = time.strptime(date_str,'%Y%m%d')
+    print(mydate)
+
 if __name__ == '__main__':
-    test3(2020, 1, 1)
+    test2()

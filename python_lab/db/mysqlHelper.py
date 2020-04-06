@@ -54,15 +54,16 @@ class mysqlHelper:
         db = pymysql.connect(self.host, self.username, self.password, self.dbname)
         # 创建一个游标
         cursor = db.cursor()
+        result_count = 0
         # 执行
         try:
             # 执行SQL语句
             if values == ():
                 print("单条执行")
-                cursor.execute(sql)
+                result_count = cursor.execute(sql)
             else:
                 print("批量执行")
-                cursor.executemany(sql,values)
+                result_count = cursor.executemany(sql,values)
             # 提交到数据库
             db.commit()
             print("执行SQL成功, sql: " + sql)
@@ -74,7 +75,32 @@ class mysqlHelper:
         cursor.close()
         # 关闭连接
         db.close()
+        return result_count
 
+    #单条插入，返回主键
+    def insert_one(self, sql):
+        # 打开数据库连接
+        db = pymysql.connect(self.host, self.username, self.password, self.dbname)
+        # 创建一个游标
+        cursor = db.cursor()
+        record_id = -1
+        # 执行
+        try:
+            # 执行SQL语句
+            result_count = cursor.execute(sql)
+            record_id = db.insert_id()
+            # 提交到数据库
+            db.commit()
+            print("执行SQL成功, sql: " + sql)
+        except Exception as ex:
+            db.rollback()
+            print("执行SQL出错, sql: " + sql)
+            print("出现如下异常: %s" % ex)
+        # 关闭游标
+        cursor.close()
+        # 关闭连接
+        db.close()
+        return record_id
 
 if __name__ == "__main__":
     host = "localhost"
