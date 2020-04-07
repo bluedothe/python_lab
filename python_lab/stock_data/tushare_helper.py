@@ -189,15 +189,19 @@ class TushareHelper:
         return result
 
     #获取特定一天的全部股票交易数据
-    @printHelper.time_this_function
-    def get_history_day(self,onedate):
-        start_dt = '20200401'
+    #@printHelper.time_this_function
+    def get_history_day(self,onedate = ""):
+        start_dt = '20200404'
         time_temp = datetime.datetime.now() - datetime.timedelta(days=1)
         end_dt = time_temp.strftime('%Y%m%d')
-        end_dt = "20200403"
+        end_dt = "20200407"
         stock_pool = ['600848.SH', '300666.SZ', '300618.SZ', '002049.SZ', '300672.SZ']
-        #df = ts.get_hist_data(code='600848',start="2020-04-01",end="2020-04-03")  # 一次性获取全部日k线数据
-        df = self.pro.query("daily",ts_code=stock_pool[0], start_date=start_dt, end_date=end_dt)
+        ##df = ts.get_hist_data(code='600848',start="2020-04-01",end="2020-04-03")  # 一次性获取全部日k线数据
+        df = ts.get_hist_data(code='600848', start="2020-04-04", end="2020-04-07")  # 一次性获取全部日k线数据
+        #df = ts.get_today_all()
+        #df = self.pro.query("daily",ts_code=stock_pool[0], start_date=start_dt, end_date=end_dt)
+        ##df = self.pro.query("daily", start_date=start_dt, end_date=start_dt)
+        #df = self.pro.daily(trade_date=end_dt)
         print(df)
 
     #批量格式化日期字段，去掉分隔符
@@ -232,6 +236,31 @@ class TushareHelper:
             filename = config.tushare_csv_home + "day_pro/" + ts_code + ".csv"
             newdf.to_csv(filename, index=False, encoding="utf_8_sig")
 
+    #获取至上次采集历史数据后，到今天的交易数据，然后追加到cvs文件中，文件没有则自动创建
+    def get_history_by_phase(self):
+        #start_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = 'tushare_history_all'")
+        #start_date = self.mysql.select("select * from collect_log where data_type = %s",['tushare_history_all'])
+        #start_date = self.mysql.select("select * from collect_log ")
+        data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s", 'tushare_history_all')
+        start_date = data_end_date[0][0] + datetime.timedelta(days=1)
+        start_date_pro = start_date.strftime('%Y%m%d')
+        now = datetime.datetime.now()
+        end_date_pro = now.strftime('%Y%m%d')
+        end_date = now.strftime('%Y-%m-%d')
+
+        dfpro = self.pro.query("daily", start_date=start_date_pro, end_date=end_date_pro)
+        if dfpro.empty:return
+        for index,row in dfpro.iterrows():
+            filename = config.tushare_csv_home + "day_test/" + row['ts_code'] + ".csv"
+            df = ts.get_hist_data(code=row['ts_code'][0:-3], start=str(start_date), end=str(end_date))
+            if not df.empty:
+                #将dfpro的一行与df合并
+                dfall = pd.merge(df,pd.DataFrame(row,columns=dfpro.columns), copy=False)
+                print(dfall)
+                #newdf.to_csv(filename, index=False, encoding="utf_8_sig")
+
+            if index == 2:break
+
 if __name__ == '__main__':
     tshelper = TushareHelper()
     #tshelper.get_stock_basic()
@@ -242,4 +271,5 @@ if __name__ == '__main__':
     #tshelper.stock_basic_mysql_pandas()
 
     #tshelper.get_history_day()
-    tshelper.get_history_phase("000003.SZ")
+    #tshelper.get_history_phase("000003.SZ")
+    tshelper.get_history_by_phase()

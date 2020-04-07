@@ -45,7 +45,7 @@ class mysqlHelper:
         return results
 
 
-    # 执行添加、删除和更新
+    # 执行添加、删除和更新，返回执行成功的调试，更新操作返回实际更新记录条数的2倍
     # 有values参数则会执行批量操作，这时sql参数格式为：'insert into '表名'(字段名) values(%s,%s,%s,%s)'，
     # values参数的格式为数组或元组内套元组：[(),(),()]或((),(),())
     # values的生成方法：values = [],values.append(('需要插入的字段对应的value'))  这里注意要用两个括号扩起来
@@ -101,6 +101,32 @@ class mysqlHelper:
         # 关闭连接
         db.close()
         return record_id
+
+    # 执行查询语句
+    def select(self, sql,paras=None):
+        # 打开数据库连接
+        db = pymysql.connect(self.host, self.username, self.password, self.dbname)
+        # 创建一个游标
+        cursor = db.cursor()
+        result = None
+
+        # 执行
+        try:
+            # 执行SQL语句
+            cursor.execute(sql,paras)
+            result = cursor.fetchall()
+            # 提交到数据库
+            db.commit()
+            print("执行SQL成功, sql: " + sql)
+        except Exception as ex:
+            db.rollback()
+            print("执行SQL出错, sql: " + sql)
+            print("出现如下异常: %s" % ex)
+        # 关闭游标
+        cursor.close()
+        # 关闭连接
+        db.close()
+        return result
 
 if __name__ == "__main__":
     host = "localhost"
