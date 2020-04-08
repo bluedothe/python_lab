@@ -10,7 +10,7 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
-from _datetime import datetime
+import datetime
 import time
 import pandas as pd
 from sqlalchemy import create_engine
@@ -19,6 +19,7 @@ from stock_data import bluedothe
 from stock_data import config
 from stock_data.tushare_helper import TushareHelper
 from stock_data import mysql_script
+from tool import printHelper
 
 class DataCollect:
     def __init__(self):
@@ -90,6 +91,32 @@ class DataCollect:
         else:
             self.mysql.exec(mysql_script.update_collect_log.format(**paras))
 
+    #自动补齐交易历史数据
+    @printHelper.time_this_function
+    def get_history_by_date(self):
+        # start_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = 'tushare_history_all'")
+        # start_date = self.mysql.select("select * from collect_log where data_type = %s",['tushare_history_all'])
+        # start_date = self.mysql.select("select * from collect_log ")
+        last_data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",'tushare_history_all')
+        start_date = last_data_end_date[0][0] + datetime.timedelta(days=1)
+        today = datetime.datetime.now()
+        end_date = today.strftime('%Y-%m-%d')
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_type": "tushare_history_all", "data_name": "tushare交易数据，两个接口合并",
+                 "data_source": "tusharepro+tushare", "collect_start_time": now, "collect_status": "R"}
+        log_id = self.record_log(paras)
+        while start_date <= end_date:
+            start_date_pro = start_date.strftime('%Y%m%d')
+            #print(start_date_pro)
+            self.tshelper.get_history_by_date(start_date_pro)
+            start_date = start_date + datetime.timedelta(days=1)
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_end_date": str(end_date), "collect_end_time": now,
+                 "collect_log": f"完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": 3}
+        self.record_log(paras, False)
+
     def test_record_log(self):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         print(now)
@@ -126,4 +153,5 @@ if __name__ == '__main__':
     #dc.test()
     #dc.get_stock_history()
     #dc.test_record_log()
-    dc.get_stock_history_pro()
+    #dc.get_stock_history_pro()
+    dc.get_history_by_date()

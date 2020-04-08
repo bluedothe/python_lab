@@ -237,37 +237,38 @@ class TushareHelper:
             filename = config.tushare_csv_home + "day_pro/" + ts_code + ".csv"
             newdf.to_csv(filename, index=False, encoding="utf_8_sig")
 
-    #获取至上次采集历史数据后，到今天的交易数据，然后追加到cvs文件中，文件没有则自动创建
-    def get_history_by_phase(self):
-        #start_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = 'tushare_history_all'")
-        #start_date = self.mysql.select("select * from collect_log where data_type = %s",['tushare_history_all'])
-        #start_date = self.mysql.select("select * from collect_log ")
-        data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s", 'tushare_history_all')
-        start_date = data_end_date[0][0] + datetime.timedelta(days=1)
-        start_date_pro = start_date.strftime('%Y%m%d')
-        now = datetime.datetime.now()
-        end_date_pro = now.strftime('%Y%m%d')
-        end_date = now.strftime('%Y-%m-%d')
-
-        dfpro = self.pro.query("daily", start_date=start_date_pro, end_date=end_date_pro)
+    #获取某天的全部交易数据，然后追加到cvs文件中，文件没有则自动创建
+    def get_history_by_date(self,trade_date_pro):
+        trade_date = datetime.datetime.strptime(trade_date_pro,'%Y%m%d').date()
+        print(trade_date)
+        dfpro = self.pro.query("daily", trade_date=trade_date_pro)
         #将dfpro数据按照ts_code分组，按照trade_date升序，取出相同ts_code的一组数据，构造成一个dataFrame对象
         #dfpro_new = dfpro.sort_values(by =['ts_code','trade_date'], axis=0, ascending=True)
-        #dfpro_new.loc[dfpro_new['ts_code'] == ts_code]
+        #dfpro_code = dfpro_new.loc[dfpro_new['ts_code'] == '603300.SH']
+        ##print(dfpro['ts_code'].drop_duplicates())  #列数据去重
         #调用旧接口（ts_code,start_date,end_date)取数据，按照trade_date升序，与上一个dataFrame对象合并
         #写入cvs文件中，如果cvs文件不存在则新建
         #if os.path.isfile(filename):df.to_csv(filename, mode='a', header=False,sep=',');else:df.to_csv(filename, mode='w', header=True,sep=',')
         if dfpro.empty:return
-        for index,row in dfpro.iterrows():
-            print(type(row))
-            filename = config.tushare_csv_home + "day_test/" + row['ts_code'] + ".csv"
-            df = ts.get_hist_data(code=row['ts_code'][0:-3], start=str(start_date), end=str(end_date))
+        for i in range(0,len(dfpro)-2):
+            row = pd.DataFrame(dfpro.iloc[i:i+1])
+            ts_code = row.loc[i,'ts_code']
+            code = ts_code[0:-3]
+            filename = config.tushare_csv_home + "day/" + ts_code + ".csv"
+            df = ts.get_hist_data(code=code, start=str(trade_date), end=str(trade_date))
             if not df.empty:
-                #将dfpro的一行与df合并
-                dfall = pd.merge(df,pd.DataFrame(row,columns=dfpro.columns), copy=False)
-                #print(dfall)
-                #newdf.to_csv(filename, index=False, encoding="utf_8_sig")
+                df.drop(['open', 'high', 'low', 'close'], axis=1, inplace=True)
+                df.rename(index=self.format_date, inplace=True)
+                df['new_date'] = (df.index)
+                dfall = pd.merge(row, df, how='left', left_on='trade_date', right_on='new_date', sort=False,copy=False)
+                dfall.drop('new_date', axis=1, inplace=True)
+            else:
+                dfall = row
 
-            if index == 2:break
+            if os.path.isfile(filename):
+                dfall.to_csv(filename, index=False, mode='a', header=False, sep=',')
+            else:
+                dfall.to_csv(filename, index=False, mode='w', header=True, sep=',')
 
 if __name__ == '__main__':
     tshelper = TushareHelper()
@@ -280,4 +281,7 @@ if __name__ == '__main__':
 
     #tshelper.get_history_day()
     #tshelper.get_history_phase("000003.SZ")
-    tshelper.get_history_by_phase()
+
+    now = datetime.datetime.now()
+    end_date_pro = now.strftime('%Y%m%d')
+    tshelper.get_history_by_date(end_date_pro)
