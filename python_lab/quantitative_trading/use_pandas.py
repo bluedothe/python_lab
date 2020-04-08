@@ -8,6 +8,7 @@
 
 import pandas as pd
 import numpy as np
+import os
 
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
@@ -72,9 +73,23 @@ def test6():
         'three': pd.Series(np.random.randn(3), index=['b', 'c', 'd'])})
     print(df)
 
+def test7():
+    df = pd.DataFrame(np.random.randn(6,4),columns=list('ABCD'))
+    filename = "D:/Temp/" + 'my_csv.csv'
+    print(df)
+    if os.path.isfile(filename):
+        df1 = df.loc[df['A'] > 0.5]
+        print(df1)
+        df1.to_csv(filename, mode='a', header=False,sep=',')
+    else:
+        df2 = df.loc[df['A']>0.5]
+        print(df2)
+        df2.to_csv(filename, mode='w', header=True, sep=',')
+
 if __name__ == '__main__':
     #test1()
     #test2()
     #test3()
     #test4()
-    test6()
+    #test6()
+    test7()

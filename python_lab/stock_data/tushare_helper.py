@@ -9,6 +9,7 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
+import os
 import pandas as pd
 import tushare as ts
 import datetime
@@ -249,14 +250,21 @@ class TushareHelper:
         end_date = now.strftime('%Y-%m-%d')
 
         dfpro = self.pro.query("daily", start_date=start_date_pro, end_date=end_date_pro)
+        #将dfpro数据按照ts_code分组，按照trade_date升序，取出相同ts_code的一组数据，构造成一个dataFrame对象
+        #dfpro_new = dfpro.sort_values(by =['ts_code','trade_date'], axis=0, ascending=True)
+        #dfpro_new.loc[dfpro_new['ts_code'] == ts_code]
+        #调用旧接口（ts_code,start_date,end_date)取数据，按照trade_date升序，与上一个dataFrame对象合并
+        #写入cvs文件中，如果cvs文件不存在则新建
+        #if os.path.isfile(filename):df.to_csv(filename, mode='a', header=False,sep=',');else:df.to_csv(filename, mode='w', header=True,sep=',')
         if dfpro.empty:return
         for index,row in dfpro.iterrows():
+            print(type(row))
             filename = config.tushare_csv_home + "day_test/" + row['ts_code'] + ".csv"
             df = ts.get_hist_data(code=row['ts_code'][0:-3], start=str(start_date), end=str(end_date))
             if not df.empty:
                 #将dfpro的一行与df合并
                 dfall = pd.merge(df,pd.DataFrame(row,columns=dfpro.columns), copy=False)
-                print(dfall)
+                #print(dfall)
                 #newdf.to_csv(filename, index=False, encoding="utf_8_sig")
 
             if index == 2:break

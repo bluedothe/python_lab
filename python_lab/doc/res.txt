@@ -2,3 +2,6 @@
 学习该语句的使用方法：val = ','.join(str(v) for v in df.values)
 pandas的to_sql插入数据，无法处理重复数据的插入，不加主键会重复插入，加主键会报错；
 使用pymysql的executemany多条记录批量入库,执行报错：not enough arguments for format string，原因是没有把传入的数组参数分开，把元组当成一个sql参数了
+
+dataframe 按条件筛选行
+https://blog.csdn.net/butterfly1107/article/details/82756902
