@@ -114,7 +114,7 @@ class DataCollect:
             start_date = start_date + datetime.timedelta(days=1)
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now,
-                 "collect_log": f"完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": 3}
+                 "collect_log": f"完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
         self.record_log(paras, False)
 
     def test_record_log(self):

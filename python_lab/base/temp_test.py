@@ -8,6 +8,7 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
+import os
 import datetime
 import time
 from tool.printHelper import time_this_function
@@ -83,5 +84,33 @@ def test5():
     mydate = time.strptime(date_str,'%Y%m%d')
     print(mydate)
 
+#读取文件的创建时间和修改时间
+def test6():
+    t1 = time.ctime(os.stat("D:/Temp/f_00006b").st_mtime)  # 文件的修e5a48de588b67a686964616f31333365666263改时间
+    print(datetime.datetime.strptime(t1, '%Y-%m-%d').date())
+    t2 = time.ctime(os.stat("D:/Temp/f_00006b").st_ctime)  # 文件的创建时间
+    print(datetime.datetime.strptime(t2, '%Y-%m-%d').date())
+    t3 = time.localtime(os.stat("D:/Temp/f_00006b").st_mtime)  # 文件访问时间 适合计算时间
+    print(datetime.datetime.strptime(t3, '%Y-%m-%d').date())
+    t4 = ModifiedTime = time.localtime(os.stat("D:/Temp/f_00006b").st_mtime)  # 文件访问时间
+    print(datetime.datetime.strptime(t4, '%Y-%m-%d').date())
+    y = time.strftime('%Y', ModifiedTime)
+    m = time.strftime('%m', ModifiedTime)
+    d = time.strftime('%d', ModifiedTime)
+    H = time.strftime('%H', ModifiedTime)
+    M = time.strftime('%M', ModifiedTime)
+
+#遍历目录，打印文件修改时间
+def test7():
+    path = u"F:/becom/其他"
+    for root, dir, files in os.walk(path):
+        for file in files:
+            full_path = os.path.join(root, file)
+            #print(full_path)
+            #print(file)
+            mtime = os.stat(full_path).st_mtime
+            file_modify_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
+            print("{0} 修改时间是: {1}".format(full_path, file_modify_time))
+
 if __name__ == '__main__':
-    test2()
+    test7()
