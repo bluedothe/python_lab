@@ -17,10 +17,12 @@ import datetime
 import time
 import pymysql
 
+from stock_data import bluedothe
+
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
-token = 'b5f94a8161ede1ba5b20b62c133d866ccfebcb2ce314489d6447f948'
+token = bluedothe.tushare_token
 
 # 设置tushare pro的token并获取连接
 #ts.set_token(token)    #该语句可以省略，直接将token作为pro_api的参数即可

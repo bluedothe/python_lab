@@ -12,6 +12,7 @@ import os
 import datetime
 import time
 from tool.printHelper import time_this_function
+from tool import file_util
 
 def test1():
     str = "abvcelsdss"
@@ -102,15 +103,19 @@ def test6():
 
 #遍历目录，打印文件修改时间
 def test7():
-    path = u"F:/becom/其他"
+    path = "E:/database/csv/tushare/day_test/"
     for root, dir, files in os.walk(path):
         for file in files:
             full_path = os.path.join(root, file)
             #print(full_path)
             #print(file)
             mtime = os.stat(full_path).st_mtime
-            file_modify_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(mtime))
-            print("{0} 修改时间是: {1}".format(full_path, file_modify_time))
+            file_modify_time = time.strftime('%Y-%m-%d', time.localtime(mtime))
+            if file_modify_time > "2020-04-07":
+                print("{0} 修改时间是: {1}".format(full_path, file_modify_time))
+
+def test8(full_path, file):
+    print("文件路径:{},{}".format(full_path, file))
 
 if __name__ == '__main__':
-    test7()
+    file_util.traversal_dir("D:/Temp/android/HelloWorld/res",test8)

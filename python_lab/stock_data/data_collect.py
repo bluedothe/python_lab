@@ -10,9 +10,12 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
+import os
 import datetime
 import time
 import pandas as pd
+import chardet
+import csv
 from sqlalchemy import create_engine
 from db.mysqlHelper import mysqlHelper
 from stock_data import bluedothe
@@ -56,14 +59,38 @@ class DataCollect:
         self.tshelper.stock_basic_mysql_one("P")
 
     #采集交易数据，tusharepro+tushare
+    #只在第一次采集的时候执行，以后执行追加方法
+    @printHelper.time_this_function
     def get_stock_history(self):
+        #last_data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",'tushare_history_all')
+        #start_date = last_data_end_date[0][0] + datetime.timedelta(days=1)
+        today = datetime.datetime.now()
+        end_date = today.strftime('%Y-%m-%d')
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_type": "tushare_history_all", "data_name": "tushare交易数据，两个接口合并",
+                 "data_source": "tusharepro+tushare", "collect_start_time": now, "collect_status": "R"}
+        log_id = self.record_log(paras)
+
         sql = "select ts_code from stock_basic"
         stock_basic_df = pd.read_sql(sql, self.engine, index_col=None, coerce_float=True, params=None, parse_dates=None, columns=None,chunksize=None)
         for ts_code in stock_basic_df['ts_code']:
             print(ts_code)
+            ##filename = config.tushare_csv_home + "day/" + ts_code + ".csv"
+            ##if os.path.isfile(filename): continue
+            time.sleep(0.8)
             self.tshelper.get_history_phase(ts_code)
 
-    #采集交易数据，tusharepr
+        start_date = "2017-10-11"
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_end_date": str(end_date), "collect_end_time": now,
+                 "collect_log": f"完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
+        self.record_log(paras, False)
+
+    #采集交易数据，tusharepro
+    # 只在第一次采集的时候执行，以后执行追加方法
+    @printHelper.time_this_function
     def get_stock_history_pro(self):
         sql = "select ts_code from stock_basic"
         stock_basic_df = pd.read_sql(sql, self.engine, index_col=None, coerce_float=True, params=None, parse_dates=None, columns=None,chunksize=None)
@@ -73,12 +100,13 @@ class DataCollect:
         log_id = self.record_log(paras)
 
         for ts_code in stock_basic_df['ts_code']:
-            time.sleep(0.5)
-            self.tshelper.get_history_pro(ts_code)
+            time.sleep(1)
+            self.tshelper.get_history_pro(ts_code, "19880101", "20081231")
+            self.tshelper.get_history_pro(ts_code, "20090101", "20200411")
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        paras = {"data_end_date": "2020-04-03", "collect_end_time": now,
-                 "collect_log": "一次完成到2020-04-03的所有交易数据", "collect_status": "S", "id": log_id}
+        paras = {"data_end_date": "2020-04-12", "collect_end_time": now,
+                 "collect_log": "一次完成到2020-04-12的所有交易数据", "collect_status": "S", "id": log_id}
         self.record_log(paras, False)
 
     def record_log(self,paras,is_insert = True):
@@ -91,7 +119,7 @@ class DataCollect:
         else:
             self.mysql.exec(mysql_script.update_collect_log.format(**paras))
 
-    #自动补齐交易历史数据
+    #增量追加交易历史数据(tusharepro+tushare)
     @printHelper.time_this_function
     def get_history_by_date(self):
         # start_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = 'tushare_history_all'")
@@ -99,6 +127,7 @@ class DataCollect:
         # start_date = self.mysql.select("select * from collect_log ")
         last_data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",'tushare_history_all')
         start_date = last_data_end_date[0][0] + datetime.timedelta(days=1)
+        start_date_bak = start_date
         today = datetime.datetime.now()
         end_date = today.strftime('%Y-%m-%d')
         end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
@@ -114,8 +143,88 @@ class DataCollect:
             start_date = start_date + datetime.timedelta(days=1)
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now,
-                 "collect_log": f"完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
+                 "collect_log": f"完成从{start_date_bak}到{end_date}的数据追加", "collect_status": "S", "id": log_id}
         self.record_log(paras, False)
+
+    # 增量追加交易历史数据(pro)
+    @printHelper.time_this_function
+    def get_history_pro_by_date(self):
+        # start_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = 'tushare_history_all'")
+        # start_date = self.mysql.select("select * from collect_log where data_type = %s",['tushare_history_all'])
+        # start_date = self.mysql.select("select * from collect_log ")
+        last_data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",
+                                               'tushare_history_pro')
+        start_date = last_data_end_date[0][0] + datetime.timedelta(days=1)
+        start_date_bak = start_date
+        today = datetime.datetime.now()
+        end_date = today.strftime('%Y-%m-%d')
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_type": "tushare_history_pro", "data_name": "tusharepro交易数据",
+                 "data_source": "tusharepro", "collect_start_time": now, "collect_status": "R"}
+        log_id = self.record_log(paras)
+        while start_date <= end_date:
+            start_date_pro = start_date.strftime('%Y%m%d')
+            # print(start_date_pro)
+            self.tshelper.get_history_pro_by_date(start_date_pro)
+            start_date = start_date + datetime.timedelta(days=1)
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_end_date": str(end_date), "collect_end_time": now,
+                 "collect_log": f"完成从{start_date_bak}到{end_date}的数据追加", "collect_status": "S", "id": log_id}
+        self.record_log(paras, False)
+
+    #批量执行历史交易数据追加
+    def batch_execute(self):
+        self.get_history_by_date()   #追加tusharepro+tushare日交易数据
+        self.get_history_pro_by_date()   #追加tusharepro日交易数据
+
+    #删除cvs文件中指定的行数据
+    def del_cvs_rows(self):
+        path = "E:/database/csv/tushare/day_test/"
+        datestr = "2020-04-07"
+        for root, dir, files in os.walk(path):
+            for file in files:
+                full_path = os.path.join(root, file)
+                # print(full_path)
+                # print(file)
+                filesize = os.path.getsize(full_path)  #文件字节数
+                print("filesize为: %s" % (filesize))
+                if filesize == 0: continue
+                mtime = os.stat(full_path).st_mtime
+                file_modify_time = time.strftime('%Y-%m-%d', time.localtime(mtime))
+                if file_modify_time > datestr:
+                    print("{0} 修改时间是: {1}".format(full_path, file_modify_time))
+                    csv_file =  open(full_path, "rb+")
+                    print("csv_file.tell为: %s" % (csv_file.tell()))
+                    csv_file.seek(-400, os.SEEK_END)  #seek是光标移到
+                    lines = csv_file.readlines()
+                    lines_count = len(lines)
+                    print("总行数：%s" % (lines_count))
+                    print("csv_file.tell为: %s" % (csv_file.tell()))
+                    if lines_count >=3:
+                        csv_file.seek(-400, os.SEEK_END)  # seek是光标移到
+                        print("csv_file.tell为: %s" % (csv_file.tell()))
+                        for i in range(lines_count):
+                            print("i:",i)
+                            line = csv_file.readline()
+                            print("读取的数据为: %s" % (line))
+                            print("csv_file.tell为: %s" % (csv_file.tell()))
+
+                            print("xx1:",line)
+                            print("xx2:",chardet.detect(line))
+                            print("xx3:",line.decode(encoding="gb2312"))
+                            print("xx5:",chardet.detect((line.decode(encoding="gb2312")).encode("utf-8")))
+
+                            linexx = line.decode(encoding="utf-8")
+                            print("行头：",linexx[0:2])
+                            if linexx[0:2] == "0,":
+                                print("该行要删除: %s" % (linexx))
+
+                    # file.truncate([size])从文件的首行首字符开始截断，截断文件为 size 个字符，无 size 表示从当前位置截断；截断之后后面的所有字符被删除，其中 windows 系统下的换行代表2个字符大小。
+                    #csv_file.truncate()  #截取光标位置之前的内容，后面的删除
+                    csv_file.close()
+                    break
 
     def test_record_log(self):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -125,14 +234,7 @@ class DataCollect:
         paras = {"data_end_date": "2020-04-03", "collect_end_time": now, "collect_log": "一次完成2017-10-09到2020-04-03的所有交易数据", "collect_status": "S", "id": 1}
         self.record_log(paras,False)
 
-    #测试
-    def string_format(self):
-        paras = {"host":bluedothe.mysql_host, "user":bluedothe.mysql_username, "passwd":bluedothe.mysql_password, "dbname":bluedothe.mysql_dbname}
-        str = 'mysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**paras)
-        print(str)
-        print(datetime.now())
-
-    # 测试
+    # 测试通过传递value元组批量插入，试验失败
     def test(self):
         #sql="""INSERT INTO stock_basic(code,symbol,name,area,industry,fullname,enname,market,exchange,curr_type,list_date,delist_date,is_hs,create_time,update_time)
         #VALUES('688399.SH','688399','硕世生物','江苏','医疗保健','江苏硕世生物科技股份有限公司','Jiangsu Bioperfectus Technologies Co., Ltd.','科创板','SSE','CNY','20191205','None','N','2020-03-31 22:53:51','2020-03-31 22:53:51')"""
@@ -154,4 +256,6 @@ if __name__ == '__main__':
     #dc.get_stock_history()
     #dc.test_record_log()
     #dc.get_stock_history_pro()
-    dc.get_history_by_date()
+    #dc.get_history_pro_by_date()
+    #dc.get_history_by_date()
+    #dc.del_cvs_rows()

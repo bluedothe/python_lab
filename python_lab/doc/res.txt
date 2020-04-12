@@ -5,3 +5,15 @@ pandas的to_sql插入数据，无法处理重复数据的插入，不加主键�
 
 dataframe 按条件筛选行
 https://blog.csdn.net/butterfly1107/article/details/82756902
+
+网络爬虫之东方财富网股票板块
+https://blog.csdn.net/qq_22499377/article/details/78116573
+
+Python爬取所有股票数据并进行数据分析
+http://www.demodashi.com/demo/15238.html
+
+Python爬取所有股票数据并进行数据分析
+https://blog.csdn.net/MLDan/article/details/89261830
+
+简单爬虫：东方财富网股票数据爬取(python_017)
+https://zhuanlan.zhihu.com/p/50099084
