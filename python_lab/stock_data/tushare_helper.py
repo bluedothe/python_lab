@@ -258,7 +258,7 @@ class TushareHelper:
         #写入cvs文件中，如果cvs文件不存在则新建
         #if os.path.isfile(filename):df.to_csv(filename, mode='a', header=False,sep=',');else:df.to_csv(filename, mode='w', header=True,sep=',')
         if dfpro.empty:return
-        for i in range(0,len(dfpro)-2):
+        for i in range(0,len(dfpro) - 1):
             row = pd.DataFrame(dfpro.iloc[i:i+1])
             ts_code = row.loc[i,'ts_code']
             code = ts_code[0:-3]
@@ -291,7 +291,8 @@ class TushareHelper:
         # 写入cvs文件中，如果cvs文件不存在则新建
         # if os.path.isfile(filename):df.to_csv(filename, mode='a', header=False,sep=',');else:df.to_csv(filename, mode='w', header=True,sep=',')
         if dfpro.empty: return
-        for i in range(0, len(dfpro) - 2):
+
+        for i in range(0, len(dfpro) - 1):
             row = pd.DataFrame(dfpro.iloc[i:i + 1])
             ts_code = row.loc[i, 'ts_code']
             filename = config.tushare_csv_home + "day_pro/" + ts_code + ".csv"
@@ -312,3 +313,4 @@ if __name__ == '__main__':
 
     #tshelper.get_history_day()
     #tshelper.get_history_phase("000003.SZ")
+

@@ -23,6 +23,7 @@ from stock_data import config
 from stock_data.tushare_helper import TushareHelper
 from stock_data import mysql_script
 from tool import printHelper
+from tool import file_util
 
 class DataCollect:
     def __init__(self):
@@ -182,7 +183,7 @@ class DataCollect:
     #删除cvs文件中指定的行数据
     def del_cvs_rows(self):
         path = "E:/database/csv/tushare/day_test/"
-        datestr = "2020-04-07"
+        datestr = "2020-04-13"
         for root, dir, files in os.walk(path):
             for file in files:
                 full_path = os.path.join(root, file)
@@ -193,7 +194,7 @@ class DataCollect:
                 if filesize == 0: continue
                 mtime = os.stat(full_path).st_mtime
                 file_modify_time = time.strftime('%Y-%m-%d', time.localtime(mtime))
-                if file_modify_time > datestr:
+                if file_modify_time == datestr:
                     print("{0} 修改时间是: {1}".format(full_path, file_modify_time))
                     csv_file =  open(full_path, "rb+")
                     print("csv_file.tell为: %s" % (csv_file.tell()))
@@ -226,6 +227,68 @@ class DataCollect:
                     csv_file.close()
                     break
 
+    #删除文件最后一行
+    def delete_last_row(self,full_path,filename=""):
+        df = pd.read_csv(full_path)
+        filesize = os.path.getsize(full_path)  # 文件字节数
+        print("filesize为: %s" % (filesize))
+        if filesize == 0: return
+        df = df.astype(str)
+        mtime = os.stat(full_path).st_mtime
+        file_modify_time = time.strftime('%Y-%m-%d', time.localtime(mtime))
+        if file_modify_time == "2020-04-13":
+            csv_file = open(full_path, "rb+")
+            print("csv_file.tell为: %s" % (csv_file.tell()))
+            csv_file.seek(-400, os.SEEK_END)  # seek是光标移到
+            lines = csv_file.readlines()
+            lines_count = len(lines)
+            print("读取的行数：%s" % (lines_count))
+            print("csv_file.tell为: %s" % (csv_file.tell()))
+            if lines_count >= 2:
+                csv_file.seek(-400, os.SEEK_END)  # seek是光标移到
+                print("csv_file.tell为: %s" % (csv_file.tell()))
+                for i in range(lines_count-1):
+                    print("i:", i)
+                    line = csv_file.readline()
+                    print("读取的数据为: %s" % (line))
+                    print("csv_file.tell为: %s" % (csv_file.tell()))
+
+                    line_utf8 = line.decode(encoding="utf-8")
+                    print("行{}：".format(i+1), line_utf8)
+                    if line_utf8[0:2] == "0,":
+                        print("该行要删除: %s" % (line_utf8))
+
+                # file.truncate([size])从文件的首行首字符开始截断，截断文件为 size 个字符，无 size 表示从当前位置截断；截断之后后面的所有字符被删除，其中 windows 系统下的换行代表2个字符大小。
+                csv_file.truncate()  #截取光标位置之前的内容，后面的删除
+            csv_file.close()
+        else:
+            print("no update file")
+
+    @printHelper.time_this_function
+    def batch_delete_last_row(self):
+        file_util.traversal_dir("E:/database/csv/tushare/day",self.delete_last_row)
+
+    def update_value(self):
+        full_path = "E:/database/csv/tushare/day/000001.SZ.csv"
+        df = pd.read_csv(full_path)
+        filesize = os.path.getsize(full_path)  # 文件字节数
+        print("filesize为: %s" % (filesize))
+        if filesize == 0: return
+        df = df.astype(str)
+        mtime = os.stat(full_path).st_mtime
+        file_modify_time = time.strftime('%Y-%m-%d', time.localtime(mtime))
+        if file_modify_time == "2020-04-13":
+            num = len(df)
+            print((df.iloc[num-1])['code'])
+            #df.loc[df['code'].str.contains('.'), 'code'] = df['code'][0:-3]
+            code = (df.iloc[num-1])['code']
+            if len(code) >6: (df.iloc[num - 1])['code'] = code[0:-3]
+
+            print(df.iloc[num-1])
+            df.to_csv(full_path, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
+        else:
+            print("no")
+
     def test_record_log(self):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         print(now)
@@ -252,10 +315,15 @@ if __name__ == '__main__':
     dc = DataCollect()
     #dc.get_stock_basic_pandas()
     #dc.get_stock_basic_one()
-    #dc.test()
     #dc.get_stock_history()
-    #dc.test_record_log()
     #dc.get_stock_history_pro()
-    #dc.get_history_pro_by_date()
-    #dc.get_history_by_date()
+    # dc.get_history_pro_by_date()
+    # dc.get_history_by_date()
+    ##dc.batch_execute()   #批量执行
+
+    #dc.update_value()
     #dc.del_cvs_rows()
+    # dc.test_record_log()
+    # dc.test()
+    #dc.delete_last_row("E:/database/csv/tushare/day/000001.SZ.csv")
+    dc.batch_delete_last_row()
