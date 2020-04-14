@@ -17,6 +17,14 @@ DATE_FORMAT_ABBR = "%Y%m%d"
 TIME_FORMAT = "%H:%M:%S"
 YEARLY=0; MONTHLY=1; WEEKLY=2; DAILY=3; HOURLY=4; MINUTELY=5; SECONDLY=6
 
+#返回当前日期，格式为2020-04-14，不能通过参数指定格式化样式
+#返回数据类型为<class 'datetime.date'>
+def curDatetime2(format = DATETIME_FORMAT):
+    today = datetime.datetime.now()
+    dt = today.strftime(format)
+    dt = datetime.datetime.strptime(dt, format).date()
+    return dt
+
 # 当前毫秒数
 def curMilis():
     return int(time.time() * 1000)
@@ -266,7 +274,7 @@ if __name__ == '__main__':
     dateobj = datetime.date(year=1992, month=3, day=17)
     todayobj = datetime.date.today()
     '''DATE_FORMAT_ABBR, DATE_FORMAT, DATETIME_FORMAT, TIME_FORMAT'''
-    print(datetime2str(todayobj,DATE_FORMAT))
+    #print(datetime2str(todayobj,DATE_FORMAT))
     #print(type(datetime2str(datetime.date.today(),DATE_FORMAT)))
     #print(diffrentPeriod(YEARLY,'2018-3-15','2018-11-10'))
     #print(secondsToDatetime2(time_stamp, DATE_FORMAT_ABBR))
@@ -281,5 +289,6 @@ if __name__ == '__main__':
     #print(getWeekFirstday('2014#35'))
 
     #test_get_now()
+    print(type(curDatetime2()))
 
 

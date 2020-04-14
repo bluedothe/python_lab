@@ -132,6 +132,9 @@ class DataCollect:
         today = datetime.datetime.now()
         end_date = today.strftime('%Y-%m-%d')
         end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+        if start_date >= end_date:
+            print("今天的数据已经更新完成，不必重复执行!")
+            return
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "tushare_history_all", "data_name": "tushare交易数据，两个接口合并",
@@ -160,6 +163,9 @@ class DataCollect:
         today = datetime.datetime.now()
         end_date = today.strftime('%Y-%m-%d')
         end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+        if start_date >= end_date:
+            print("今天的数据已经更新完成，不必重复执行!")
+            return
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "tushare_history_pro", "data_name": "tusharepro交易数据",
@@ -268,6 +274,7 @@ class DataCollect:
     def batch_delete_last_row(self):
         file_util.traversal_dir("E:/database/csv/tushare/day",self.delete_last_row)
 
+    #更新后文件中多了换行，有问题
     def update_value(self):
         full_path = "E:/database/csv/tushare/day/000001.SZ.csv"
         df = pd.read_csv(full_path)
@@ -317,8 +324,8 @@ if __name__ == '__main__':
     #dc.get_stock_basic_one()
     #dc.get_stock_history()
     #dc.get_stock_history_pro()
-    # dc.get_history_pro_by_date()
-    # dc.get_history_by_date()
+    #dc.get_history_pro_by_date()
+    dc.get_history_by_date()
     ##dc.batch_execute()   #批量执行
 
     #dc.update_value()
