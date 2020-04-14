@@ -248,8 +248,7 @@ class TushareHelper:
         trade_date = datetime.datetime.strptime(trade_date_pro,'%Y%m%d').date()
         print(trade_date)
         dfpro = self.pro.query("daily", trade_date=trade_date_pro)
-        #dfpro['code'] = dfpro['ts_code'][0:-3]
-        dfpro.insert(0, 'code', dfpro['ts_code'][0:-3])
+        dfpro.insert(0, 'code', (dfpro['ts_code'].str)[0:-3])
         #将dfpro数据按照ts_code分组，按照trade_date升序，取出相同ts_code的一组数据，构造成一个dataFrame对象
         #dfpro_new = dfpro.sort_values(by =['ts_code','trade_date'], axis=0, ascending=True)
         #dfpro_code = dfpro_new.loc[dfpro_new['ts_code'] == '603300.SH']
@@ -262,6 +261,8 @@ class TushareHelper:
             row = pd.DataFrame(dfpro.iloc[i:i+1])
             ts_code = row.loc[i,'ts_code']
             code = ts_code[0:-3]
+            #row.loc[i,'code'] = code
+
             filename = config.tushare_csv_home + "day/" + ts_code + ".csv"
             df = ts.get_hist_data(code=code, start=str(trade_date), end=str(trade_date))
             if not df.empty:
@@ -282,7 +283,7 @@ class TushareHelper:
     def get_history_pro_by_date(self, trade_date_pro):
         dfpro = self.pro.query("daily", trade_date=trade_date_pro)
         #dfpro['code'] = dfpro['ts_code'][0:-3]
-        dfpro.insert(0, 'code', dfpro['ts_code'][0:-3])
+        dfpro.insert(0, 'code', (dfpro['ts_code'].str)[0:-3])
         # 将dfpro数据按照ts_code分组，按照trade_date升序，取出相同ts_code的一组数据，构造成一个dataFrame对象
         # dfpro_new = dfpro.sort_values(by =['ts_code','trade_date'], axis=0, ascending=True)
         # dfpro_code = dfpro_new.loc[dfpro_new['ts_code'] == '603300.SH']
@@ -313,4 +314,5 @@ if __name__ == '__main__':
 
     #tshelper.get_history_day()
     #tshelper.get_history_phase("000003.SZ")
+    #tshelper.get_history_pro_by_date("20200413")
 

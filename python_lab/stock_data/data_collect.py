@@ -326,4 +326,4 @@ if __name__ == '__main__':
     # dc.test_record_log()
     # dc.test()
     #dc.delete_last_row("E:/database/csv/tushare/day/000001.SZ.csv")
-    dc.batch_delete_last_row()
+    #dc.batch_delete_last_row()
