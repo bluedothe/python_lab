@@ -243,6 +243,24 @@ class TushareHelper:
             else:
                 newdf.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
 
+    # （sh=上证指数 sz=深圳成指 hs300=沪深300指数 sz50=上证50 zxb=中小板 cyb=创业板）
+    def get_day_index_all(self,start_date=None, end_date=None):
+        codes = ['sh','sz','hs300','sz50','zxb','cyb']
+        for code in codes:
+            df = ts.get_hist_data(code=code,start=start_date, end=end_date)
+            if df.empty: continue
+            df.rename(index=self.format_date, inplace=True)
+            df.insert(0, 'trade_date', df.index)
+            df.insert(0, 'ts_code', code)
+            df.insert(0, 'code', code)
+            dfnew = df.sort_values(by='trade_date', axis=0, ascending=True)
+
+            filename = config.tushare_csv_day_index + code + ".csv"
+            if os.path.isfile(filename):
+                dfnew.to_csv(filename, index=False, mode='a', header=False, sep=',', encoding="utf_8_sig")
+            else:
+                dfnew.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
+
     #获取某天的全部交易数据，然后追加到cvs文件中，文件没有则自动创建
     def get_history_by_date(self,trade_date_pro):
         trade_date = datetime.datetime.strptime(trade_date_pro,'%Y%m%d').date()
@@ -263,7 +281,7 @@ class TushareHelper:
             code = ts_code[0:-3]
             #row.loc[i,'code'] = code
 
-            filename = config.tushare_csv_home + "day/" + ts_code + ".csv"
+            filename = config.tushare_csv_day + ts_code + ".csv"
             df = ts.get_hist_data(code=code, start=str(trade_date), end=str(trade_date))
             if not df.empty:
                 df.drop(['open', 'high', 'low', 'close'], axis=1, inplace=True)
@@ -296,7 +314,7 @@ class TushareHelper:
         for i in range(0, len(dfpro) - 1):
             row = pd.DataFrame(dfpro.iloc[i:i + 1])
             ts_code = row.loc[i, 'ts_code']
-            filename = config.tushare_csv_home + "day_pro/" + ts_code + ".csv"
+            filename = config.tushare_csv_day_pro + ts_code + ".csv"
 
             if os.path.isfile(filename):
                 row.to_csv(filename, index=False, mode='a', header=False, sep=',', encoding="utf_8_sig")
@@ -315,4 +333,6 @@ if __name__ == '__main__':
     #tshelper.get_history_day()
     #tshelper.get_history_phase("000003.SZ")
     #tshelper.get_history_pro_by_date("20200413")
+
+    #tshelper.get_day_index_all("2020-04-13","2020-04-15")
 

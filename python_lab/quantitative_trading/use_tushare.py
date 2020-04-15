@@ -16,6 +16,7 @@ import csv
 import datetime
 import time
 import pymysql
+import pandas as pd
 
 from stock_data import bluedothe
 
@@ -27,6 +28,10 @@ token = bluedothe.tushare_token
 # 设置tushare pro的token并获取连接
 #ts.set_token(token)    #该语句可以省略，直接将token作为pro_api的参数即可
 pro = ts.pro_api(token)
+
+# pandas数据显示设置
+pd.set_option('display.max_columns', None)  # 显示所有列
+pd.set_option('display.max_rows', None)  # 显示所有行
 
 def get_kdata():
     # 设定获取日线行情的初始日期和终止日期，其中终止日期设定为昨天。
@@ -153,9 +158,14 @@ def get_stock_company():
 #日期都填YYYYMMDD格式，比如20181010
 def get_daily():
     #data = pro.daily(ts_code='000001.SZ,600000.SH', start_date='20180701', end_date='20180718')
-    data = pro.query('daily', ts_code='000001.SZ', start_date='20180701', end_date='20180718')
+    data = pro.query('daily', ts_code='XIN9', start_date='20180701', end_date='20180718')
     #data = pro.daily(trade_date='20180810')
     print(data)
+
+#（sh=上证指数 sz=深圳成指 hs300=沪深300指数 sz50=上证50 zxb=中小板 cyb=创业板）
+def get_dpzs():
+    df = ts.get_hist_data(code='cyb', start="2020-04-15", end='2020-04-15')
+    print(df)
 
 #行情数据：停复牌信息
 def get_suspend():
@@ -209,7 +219,7 @@ if __name__ == '__main__':
     #get_version()
     #get_kdata()
     #write2csv()
-    get_stock_basic()
+    #get_stock_basic()
     #get_trade_cal()
     #get_namechange()
     #get_stock_company()
@@ -220,3 +230,4 @@ if __name__ == '__main__':
     #get_hsgt_top10()
     #get_industry()
     #test()
+    get_dpzs()

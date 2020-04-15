@@ -11,6 +11,8 @@ __copyright__ = "Copyright 2018-2020"
 
 import chardet
 import codecs
+import os
+
 
 #字符串格式化示例
 def str_format():
@@ -59,6 +61,24 @@ def str_code():
     f.write(s)
     f.close()
 
+#元组、序列、字典、字符串拼接
+def str_join():
+    a = ['1', '2', '3', '4', '5']
+    print('  '.join(a))
+    print(';'.join(a))
+    print(','.join(v for v in a))
+
+    b = "Hello My Boy"
+    print(','.join(b))
+
+    c = {'name1':'a','name2':'b','name3':'c','name4':'d'}
+    print(','.join(c))
+    print(','.join(c.keys()))
+    print(','.join(c.values()))
+
+#路径拼接
+def path_join():
+    print(os.path.join('/hello/','good/date','datbody','bac'))
 
 if __name__ == '__main__':
-    str_code()
+    str_join()

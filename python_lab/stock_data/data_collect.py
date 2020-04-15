@@ -120,6 +120,35 @@ class DataCollect:
         else:
             self.mysql.exec(mysql_script.update_collect_log.format(**paras))
 
+    #获取大盘指数
+    @printHelper.time_this_function
+    def get_day_index_all(self):
+        last_data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",'tushare_index1')
+        if last_data_end_date[0][0] == None:
+            start_date = "2017-10-16"
+        else:
+            start_date = last_data_end_date[0][0] + datetime.timedelta(days=1)
+        today = datetime.datetime.now()
+        end_date = today.strftime('%Y-%m-%d')
+        end_date = str(datetime.datetime.strptime(end_date, '%Y-%m-%d').date())
+        if start_date > end_date:
+            print("今天的数据已经更新完成，不必重复执行!")
+            return
+
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_type": "tushare_index", "data_name": "tushare大盘指数",
+                 "data_source": "tushare", "collect_start_time": now, "collect_status": "R"}
+        log_id = self.record_log(paras)
+
+        self.tshelper.get_day_index_all(start_date, end_date)
+
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_end_date": str(end_date), "collect_end_time": now,
+                 "collect_log": f"完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
+        self.record_log(paras, False)
+
+        print("--------tushare_index大盘指数追加完成------------")
+
     #增量追加交易历史数据(tusharepro+tushare)
     @printHelper.time_this_function
     def get_history_by_date(self):
@@ -132,7 +161,7 @@ class DataCollect:
         today = datetime.datetime.now()
         end_date = today.strftime('%Y-%m-%d')
         end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
-        if start_date >= end_date:
+        if start_date > end_date:
             print("今天的数据已经更新完成，不必重复执行!")
             return
 
@@ -150,6 +179,8 @@ class DataCollect:
                  "collect_log": f"完成从{start_date_bak}到{end_date}的数据追加", "collect_status": "S", "id": log_id}
         self.record_log(paras, False)
 
+        print("--------tusharepro+tushare日数据追加完成------------")
+
     # 增量追加交易历史数据(pro)
     @printHelper.time_this_function
     def get_history_pro_by_date(self):
@@ -163,7 +194,7 @@ class DataCollect:
         today = datetime.datetime.now()
         end_date = today.strftime('%Y-%m-%d')
         end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
-        if start_date >= end_date:
+        if start_date > end_date:
             print("今天的数据已经更新完成，不必重复执行!")
             return
 
@@ -171,6 +202,7 @@ class DataCollect:
         paras = {"data_type": "tushare_history_pro", "data_name": "tusharepro交易数据",
                  "data_source": "tusharepro", "collect_start_time": now, "collect_status": "R"}
         log_id = self.record_log(paras)
+
         while start_date <= end_date:
             start_date_pro = start_date.strftime('%Y%m%d')
             # print(start_date_pro)
@@ -181,10 +213,14 @@ class DataCollect:
                  "collect_log": f"完成从{start_date_bak}到{end_date}的数据追加", "collect_status": "S", "id": log_id}
         self.record_log(paras, False)
 
+        print("--------tusharepro日数据追加完成-----------------")
+
     #批量执行历史交易数据追加
     def batch_execute(self):
         self.get_history_by_date()   #追加tusharepro+tushare日交易数据
         self.get_history_pro_by_date()   #追加tusharepro日交易数据
+        self.get_day_index_all()  #追加tushare的大盘指数
+        print("========批量执行完成=======")
 
     #删除cvs文件中指定的行数据
     def del_cvs_rows(self):
@@ -324,9 +360,10 @@ if __name__ == '__main__':
     #dc.get_stock_basic_one()
     #dc.get_stock_history()
     #dc.get_stock_history_pro()
+    #dc.get_day_index_all()
     #dc.get_history_pro_by_date()
-    dc.get_history_by_date()
-    ##dc.batch_execute()   #批量执行
+    #dc.get_history_by_date()
+    dc.batch_execute()   #批量执行
 
     #dc.update_value()
     #dc.del_cvs_rows()
@@ -334,3 +371,4 @@ if __name__ == '__main__':
     # dc.test()
     #dc.delete_last_row("E:/database/csv/tushare/day/000001.SZ.csv")
     #dc.batch_delete_last_row()
+
