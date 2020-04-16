@@ -247,7 +247,7 @@ class TushareHelper:
     def get_day_index_all(self,start_date=None, end_date=None):
         codes = ['sh','sz','hs300','sz50','zxb','cyb']
         for code in codes:
-            df = ts.get_hist_data(code=code,start=start_date, end=end_date)
+            df = ts.get_hist_data(code=code,start=str(start_date), end=str(end_date))
             if df.empty: continue
             df.rename(index=self.format_date, inplace=True)
             df.insert(0, 'trade_date', df.index)

@@ -48,32 +48,6 @@ def curDate():
 def curTime(format = TIME_FORMAT):
     return time.strftime(format)
 
-# 秒转日期
-# 返回字符串类型
-def secondsToDatetime(seconds, format = DATETIME_FORMAT):
-    return time.strftime(format, time.localtime(seconds))
-
-# 秒转日期, 东八区时间处理
-# 返回字符串类型
-def secondsToDatetime2(seconds, format = DATETIME_FORMAT):
-    utc_time = datetime.datetime.utcfromtimestamp(seconds)
-    return (utc_time + datetime.timedelta(hours=8)).strftime(format)
-
-# 毫秒转日期
-# 返回字符串类型
-def milisToDatetime(milix, format = DATETIME_FORMAT):
-    return time.strftime(format, time.localtime(milix // 1000))
-
-# 日期转毫秒，传入日期字符串参数
-def datetimeToMilis(datetimestr, format = DATETIME_FORMAT):
-    strf = time.strptime(datetimestr, format)
-    return int(time.mktime(strf)) * 1000
-
-# 日期转秒，传入日期字符串参数
-def datetimeToSeconds(datetimestr, format = DATETIME_FORMAT):
-    strf = time.strptime(datetimestr, format)
-    return int(time.mktime(strf))
-
 # 当前年
 def curYear():
     return datetime.datetime.now().year
@@ -98,9 +72,12 @@ def curMinute():
 def curSecond():
     return datetime.datetime.now().second
 
-# 星期几
+# 当前星期几
 def curWeek():
     return datetime.datetime.now().weekday()
+
+####################################################################################################################
+####################################################################################################################
 
 # 几天前的时间
 # 返回日期字符串
@@ -123,13 +100,6 @@ def dtimeDaysAgo(dtimestr, days, format = DATETIME_FORMAT):
 def dtimeDaysAfter(dtimestr, days, format = DATETIME_FORMAT):
     daysAfterTime = datetime.datetime.strptime(dtimestr, format) + datetime.timedelta(days=days)
     return time.strftime(format, daysAfterTime.timetuple())
-
-# 日期时间对象转字符串
-def datetime2str(datetime, format = DATETIME_FORMAT):
-    print(datetime)
-    #return time.strftime(datetime, format).date()
-    return datetime.datetime.strftime(datetime, format)
-
 
 # 输入日期判断是哪一年的第几周，周几
 # 返回格式：(年,第几周,周几),比如：(2016, 52, 7)
@@ -171,7 +141,6 @@ def getDayLastWeekMondayAndSunday(dateobj=datetime.datetime.now()):
 
     return Monday, Sunday
 
-
 # weekflag格式为"2016#53"（即2016年第53周的开始时间）
 def getWeekFirstday(weekflag):
     year_str = weekflag[0:4]  # 取到年份
@@ -191,17 +160,6 @@ def getWeekFirstday(weekflag):
         Monday = (yearstart + datetime.timedelta(days=daydelat)).date()
     return Monday
 
-# 日期时间字符串转换为日期时间对象类型
-def str2datatime2(datetimestr, format = DATETIME_FORMAT):
-    #datetimestr = datetime.now().isoformat().split('.')[0]
-    print(datetime.datetime.strptime(datetimestr, format))
-
-# 日期时间字符串转换为日期时间对象类型
-# 传入的日期时间字符串格式支持：-、/、,、紧挨型、英文等格式，详见https://www.jianshu.com/p/f29dddce3a9a
-# 返回格式：2020-04-14 00:00:00
-def str2datetime(datetimestr):
-    return parse(datetimestr)
-
 # 计算两个时间之差，单位有unit参数指定，可以是 YEARLY, MONTHLY, WEEKLY,DAILY, HOURLY, MINUTELY, SECONDLY。即年月日周时分秒
 # 返回差值
 def diffrentPeriod(freq, startDate, endDate):
@@ -214,13 +172,73 @@ def diff(start,end):
     #print(diff.days)   #只计算相对天数
     return diff.years
 
-
 # 计算两个日期之间的天数
 def diffrentDay(start,end):
     #today = datetime.date.today()
     #my_birthday = datetime.date(year=1992, month=3, day=17)
     #print('我已经出生' + str((today - my_birthday).days) + '天')
     return str((end - start).days)
+####################################################################################################################
+####################################################################################################################
+# 秒转日期
+# 返回字符串类型
+def secondsToDatetime(seconds, format = DATETIME_FORMAT):
+    return time.strftime(format, time.localtime(seconds))
+
+# 秒转日期, 东八区时间处理
+# 返回字符串类型
+def secondsToDatetime2(seconds, format = DATETIME_FORMAT):
+    utc_time = datetime.datetime.utcfromtimestamp(seconds)
+    return (utc_time + datetime.timedelta(hours=8)).strftime(format)
+
+# 毫秒转日期
+# 返回字符串类型
+def milisToDatetime(milix, format = DATETIME_FORMAT):
+    return time.strftime(format, time.localtime(milix // 1000))
+
+# 日期转毫秒，传入日期字符串参数
+def datetimeToMilis(datetimestr, format = DATETIME_FORMAT):
+    strf = time.strptime(datetimestr, format)
+    return int(time.mktime(strf)) * 1000
+
+# 日期转秒，传入日期字符串参数
+def datetimeToSeconds(datetimestr, format = DATETIME_FORMAT):
+    strf = time.strptime(datetimestr, format)
+    return int(time.mktime(strf))
+
+# 日期时间对象转字符串
+def datetime2str(datetime, format = DATETIME_FORMAT):
+    #return time.strftime(datetime, format).date()
+    return datetime.datetime.strftime(datetime, format)
+
+# 日期时间对象转字符串
+# format参数待调试，有问题
+def datetime2str2(datetime, format = None):
+    if format is None:
+        return str(datetime)
+    else:
+        #return time.strftime(datetime, format).date()
+        return str(datetime.datetime.strftime(datetime, format))
+
+# 日期对象转字符串
+def date2str(date):
+    return str(date)
+
+# 日期字符串转换为日期对象类型
+#返回类型：<class 'datetime.date'>
+def str2date(datetimestr, format = DATE_FORMAT):
+    return datetime.datetime.strptime(datetimestr, format).date()
+
+# 日期时间字符串转换为日期时间对象类型
+def str2datetime2(datetimestr, format = DATETIME_FORMAT):
+    #datetimestr = datetime.now().isoformat().split('.')[0]
+    print(datetime.datetime.strptime(datetimestr, format))
+
+# 日期时间字符串转换为日期时间对象类型
+# 传入的日期时间字符串格式支持：-、/、,、紧挨型、英文等格式，详见https://www.jianshu.com/p/f29dddce3a9a
+# 返回格式：2020-04-14 00:00:00
+def str2datetime(datetimestr):
+    return parse(datetimestr)
 
 #time.strftime 方法来格式化日期
 #time.strptime() 函数根据指定的格式把一个时间字符串解析为时间元组
@@ -289,6 +307,7 @@ if __name__ == '__main__':
     #print(getWeekFirstday('2014#35'))
 
     #test_get_now()
-    print(type(curDatetime2()))
+    print(datetime2str2(dateobj))
+    print(type(datetime2str2(dateobj)))
 
 

@@ -24,6 +24,7 @@ from stock_data.tushare_helper import TushareHelper
 from stock_data import mysql_script
 from tool import printHelper
 from tool import file_util
+from tool import datatime_util
 
 class DataCollect:
     def __init__(self):
@@ -114,7 +115,6 @@ class DataCollect:
         #paras = {"data_type":"tushare_history_all","data_name":"tushare交易数据，两个接口合并","data_source":"tusharepro+tushare","collect_start_time":"","collect_status":"R"}
         #paras = {"data_end_date":"","collect_end_time":"","collect_log":"sucess", "collect_status":"S","id":1}
         if is_insert:
-            print(mysql_script.insert_collect_log.format(**paras))
             id = self.mysql.insert_one(mysql_script.insert_collect_log.format(**paras))
             return id
         else:
@@ -123,14 +123,15 @@ class DataCollect:
     #获取大盘指数
     @printHelper.time_this_function
     def get_day_index_all(self):
-        last_data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",'tushare_index1')
+        last_data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",'tushare_index')
         if last_data_end_date[0][0] == None:
-            start_date = "2017-10-16"
+            start_date = datatime_util.str2date("2017-10-16")
         else:
             start_date = last_data_end_date[0][0] + datetime.timedelta(days=1)
         today = datetime.datetime.now()
         end_date = today.strftime('%Y-%m-%d')
-        end_date = str(datetime.datetime.strptime(end_date, '%Y-%m-%d').date())
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+
         if start_date > end_date:
             print("今天的数据已经更新完成，不必重复执行!")
             return
