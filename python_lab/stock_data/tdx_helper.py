@@ -14,7 +14,17 @@ from pytdx.exhq import TdxExHq_API
 
 class TdxHelper:
     def __init__(self):
-        api = TdxHq_API()
+        self.api = TdxHq_API()
+
+    def get_data(self):
+        if self.api.connect('119.147.212.81', 7709):
+            data = self.api.get_security_bars(9, 0, '000001', 0,
+                                              10)  # 返回普通list,五个参数分别为：category（k线),市场代码(深市),股票代码,开始时间,记录条数
+            print(data)
+            data = self.api.to_df(self.api.get_security_bars(9, 0, '000001', 0, 10))  # 返回DataFrame
+            print(data)
+            self.api.disconnect()
 
 if __name__ == '__main__':
-    pass
+    tdx = TdxHelper()
+    tdx.get_data()
