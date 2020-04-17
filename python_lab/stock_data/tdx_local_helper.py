@@ -9,13 +9,15 @@ __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
 from pytdx.reader import TdxDailyBarReader,TdxLCMinBarReader, TdxFileNotFoundException,BlockReader
-from pytdx import BlockReader_TYPE_GROUP
 import os
 import pandas as pd
 
 from stock_data import config
 
 class TdxLocalHelper:
+    BlockReader_TYPE_FLAT = 0
+    BlockReader_TYPE_GROUP = 1
+
     def __init__(self):
         # pandas数据显示设置
         pd.set_option('display.max_columns', None)  # 显示所有列
@@ -34,11 +36,11 @@ class TdxLocalHelper:
         print(df)
 
     # 通过读取通达信的软件本地目录导出的数据
-    def read_tdx_local_sz_minline(self):
-        df = BlockReader().get_df(config.tdx_local_block + "block_zs.dat")   # 默认扁平格式
-        df2 = BlockReader().get_df("/Users/rainx/tmp/block_zs.dat", BlockReader_TYPE_GROUP)   #分组格式
+    def read_tdx_local_block(self):
+        #df = BlockReader().get_df(config.tdx_local_block_file)   # 默认扁平格式
+        df = BlockReader().get_df(config.tdx_local_block_file, self.BlockReader_TYPE_GROUP)   #分组格式
         print(df)
 
 if __name__ == '__main__':
     tdx = TdxLocalHelper()
-    tdx.read_tdx_local_sz_minline()
+    tdx.read_tdx_local_block()
