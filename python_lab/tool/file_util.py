@@ -9,6 +9,7 @@ __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
 import os
+import codecs
 
 #计算文件行数
 def get_file_line_count(file):
@@ -27,6 +28,14 @@ def  traversal_dir(root_path,function_name):
             # print(full_path)
             # print(file)
             function_name(full_path, file)
+
+'''删除文件 '''
+def delete_file(fileName):
+    if os.path.isfile(fileName):
+        try:
+            os.remove(fileName)
+        except:
+            pass
 
 if __name__ == '__main__':
     pass

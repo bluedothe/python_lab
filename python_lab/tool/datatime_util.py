@@ -240,6 +240,10 @@ def str2datetime2(datetimestr, format = DATETIME_FORMAT):
 def str2datetime(datetimestr):
     return parse(datetimestr)
 
+# 日期时间对象格式化，返回日期或时间
+def formateDateTime(datetime,format):
+    pass
+
 #time.strftime 方法来格式化日期
 #time.strptime() 函数根据指定的格式把一个时间字符串解析为时间元组
 #datetime.datetime.strptime() 由字符串格式转化为日期格式

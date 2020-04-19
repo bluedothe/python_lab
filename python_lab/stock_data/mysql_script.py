@@ -13,6 +13,8 @@ from db.mysqlHelper import mysqlHelper
 from stock_data import bluedothe
 from stock_data import config
 
+mysql = mysqlHelper(config.mysql_host, config.mysql_username, bluedothe.mysql_password, config.mysql_dbname)
+
 """
 CREATE DATABASE mydb default character set utf8mb4 collate utf8mb4_general_ci;
 CREATE DATABASE mydb DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci
@@ -81,8 +83,17 @@ create table collect_log
 insert_collect_log = "INSERT INTO collect_log(data_type,data_name,data_source,collect_start_time,collect_status) VALUES('{data_type}','{data_name}','{data_source}','{collect_start_time}','{collect_status}')"
 update_collect_log = "UPDATE collect_log SET data_end_date = '{data_end_date}', collect_end_time = '{collect_end_time}', collect_log = '{collect_log}', collect_status = '{collect_status}' WHERE id = {id}"
 
+
+def record_log(paras, is_insert=True):
+    # paras = {"data_type":"tushare_history_all","data_name":"tushare交易数据，两个接口合并","data_source":"tusharepro+tushare","collect_start_time":"","collect_status":"R"}
+    # paras = {"data_end_date":"","collect_end_time":"","collect_log":"sucess", "collect_status":"S","id":1}
+    if is_insert:
+        id = mysql.insert_one(insert_collect_log.format(**paras))
+        return id
+    else:
+        mysql.exec(update_collect_log.format(**paras))
+
 if __name__ == '__main__':
-    mysql = mysqlHelper(config.mysql_host, config.mysql_username, bluedothe.mysql_password, config.mysql_dbname)
     #mysql.exec(drop_stock_basic)
     #mysql.exec(create_stock_basic)
     #mysql.exec(insert_exam[0:-1])

@@ -243,7 +243,7 @@ class TushareHelper:
             else:
                 newdf.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
 
-    # （sh=上证指数 sz=深圳成指 hs300=沪深300指数 sz50=上证50 zxb=中小板 cyb=创业板）
+    # （sh=上证指数 sz=深证成指 hs300=沪深300指数 sz50=上证50 zxb=中小板 cyb=创业板）
     def get_day_index_all(self,start_date=None, end_date=None):
         codes = ['sh','sz','hs300','sz50','zxb','cyb']
         for code in codes:

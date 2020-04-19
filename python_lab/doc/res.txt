@@ -19,3 +19,9 @@ https://blog.csdn.net/MLDan/article/details/89261830
 
 简单爬虫：东方财富网股票数据爬取(python_017)
 https://zhuanlan.zhihu.com/p/50099084
+
+通达信分时图：
+http://blog.sina.com.cn/s/blog_5385f0d90101gi48.html
+https://blog.csdn.net/CHCH998/article/details/103713150
+
+通达信目录文件说明：http://www.360doc.com/content/12/0525/07/128891_213526909.shtml
