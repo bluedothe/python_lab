@@ -104,7 +104,7 @@ class TdxHelper:
     # 返回值：price,vol
     def get_history_minute_time_data(self):
         if self.api.connect('119.147.212.81', 7709):
-            df = self.api.to_df(self.api.get_history_minute_time_data(TDXParams.MARKET_SH, '600300', 20200417))  #市场代码， 股票代码，时间
+            df = self.api.to_df(self.api.get_history_minute_time_data(TDXParams.MARKET_SH, '603887', 20200420))  #市场代码， 股票代码，时间
             print(df)
             self.api.disconnect()
 
@@ -185,4 +185,4 @@ class TdxHelper:
 
 if __name__ == '__main__':
     tdx = TdxHelper()
-    tdx.get_security_list()
+    tdx.get_history_minute_time_data()

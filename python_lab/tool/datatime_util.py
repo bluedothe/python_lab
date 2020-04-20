@@ -178,6 +178,10 @@ def diffrentDay(start,end):
     #my_birthday = datetime.date(year=1992, month=3, day=17)
     #print('我已经出生' + str((today - my_birthday).days) + '天')
     return str((end - start).days)
+
+#给定日期时间的后一周期，比如下一天，下一月，下一分钟
+def nextDateTime():
+    pass
 ####################################################################################################################
 ####################################################################################################################
 # 秒转日期
@@ -243,6 +247,52 @@ def str2datetime(datetimestr):
 # 日期时间对象格式化，返回日期或时间
 def formateDateTime(datetime,format):
     pass
+
+def time2str(time):
+    pass
+
+def str2time(str):
+    pass
+
+#返回后一分钟时间字符串
+#输入格式为："%H:%M:%S"
+#返回值：字符串"%H:%M:%S"
+def nextmin(str):
+    arr = time.split(':')
+    timeobj = datetime.date(hour=arr[0], minute=arr[1], second=arr[2])
+
+
+#股票交易时间转序列号，时间从9:30--11:30,13:00--15:00,每分钟一档，共计240档，序列从0--239
+def stockTradeTime2Index(time):
+    arr = time.split(':')
+    index = -1
+    hour = int(arr[0])
+    min = int(arr[1])
+    switch = {
+        "09": lambda h, m: m -30,
+        "10": lambda h, m: 30 + m,
+        "11": lambda h, m: 90 + m,
+        "13": lambda h, m: 120 + m,
+        "14": lambda h, m: 180 + m,
+        "15": lambda h, m: 239,
+    }
+    return switch[arr[0]](hour,min)
+
+#股票交易时间转序列号，时间从9:30--11:30,13:00--15:00,每分钟一档，共计240档，序列从0--239
+def stockTradeIndex2Time(index):
+    phase = index // 30
+    #hour = int(arr[0])
+    #min = int(arr[1])
+    switch = {
+        "09": lambda h, m: m -30,
+        "10": lambda h, m: 30 + m,
+        "11": lambda h, m: 90 + m,
+        "13": lambda h, m: 120 + m,
+        "14": lambda h, m: 180 + m,
+        "15": lambda h, m: 239,
+    }
+    #return switch[arr[0]](hour,min)
+
 
 #time.strftime 方法来格式化日期
 #time.strptime() 函数根据指定的格式把一个时间字符串解析为时间元组
@@ -311,7 +361,14 @@ if __name__ == '__main__':
     #print(getWeekFirstday('2014#35'))
 
     #test_get_now()
-    print(datetime2str2(dateobj))
-    print(type(datetime2str2(dateobj)))
+    #print(datetime2str2(dateobj))
+    #print(type(datetime2str2(dateobj)))
+
+    print(stockTradeTime2Index('14:57:00'))
+    #now = datetime.datetime.now()
+    #timeobj = datetime.time(hour=9, minute=30, second=17)
+    #for i in range(60):
+    #    timeobj = (timeobj + datetime.timedelta(minutes=1)).strftime("%H:%M:%S")
+    #    print(timeobj)
 
 
