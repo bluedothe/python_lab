@@ -261,6 +261,61 @@ def nextmin(str):
     arr = time.split(':')
     timeobj = datetime.date(hour=arr[0], minute=arr[1], second=arr[2])
 
+#当前时间戳转换为指定格式的日期
+def test1():
+    # 使用time
+    timeStamp = time.time()  # 1559286774.2953627
+    timeArray = time.localtime(timeStamp)
+    otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+    print(otherStyleTime)  # 2019-05-31 15:12:54
+    # 使用datetime
+    timeStamp = time.time()  # 1559286774.2953627
+    dateArray = datetime.datetime.utcfromtimestamp(timeStamp)
+    otherStyleTime = dateArray.strftime("%Y-%m-%d %H:%M:%S")
+    print(otherStyleTime)  # 2019-05-31 07:12:54
+
+#把字符串类型的日期转换为时间戳
+def test2():
+    # 字符类型的时间1
+    tss1 = '2019-05-31 15:12:54'
+    # 转为时间数组
+    timeArray = time.strptime(tss1, "%Y-%m-%d %H:%M:%S")
+    print(timeArray)
+    # timeArray可以调用tm_year等
+    print(timeArray.tm_year)  # 2019
+    # 字符类型的时间2
+    tss2 = "Fri Jun 21 13:22:37 +0800 2019"
+    timeArray = time.strptime(tss2, "%a %b %d %H:%M:%S %z %Y")
+    # timeArray可以调用tm_year等
+    print(timeArray.tm_year)  # 2019
+    # 转为时间戳
+    timeStamp = int(time.mktime(timeArray))
+    print(timeStamp)  # 1559286774
+
+#更改str类型日期的显示格式
+def test3():
+    tss2 = "2019-05-31 15:12:54"
+    # 转为数组
+    timeArray = time.strptime(tss2, "%Y-%m-%d %H:%M:%S")
+    # 转为其它显示格式
+    otherStyleTime = time.strftime("%Y/%m/%d %H:%M:%S", timeArray)
+    print(otherStyleTime)  # 2019/05/31 15:12:54
+
+    tss3 = "2019/05/31 15:12:54"
+    timeArray = time.strptime(tss3, "%Y/%m/%d %H:%M:%S")
+    otherStyleTime = time.strftime("%Y-%m-%d %H:%M:%S", timeArray)
+    print(otherStyleTime)  # 2019-05-31 15:12:54
+
+    tss4 = "2019/05/31 15:12:54"
+    otherStyleTime = datetime.datetime.strptime(tss4, "%Y/%m/%d %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+    print(otherStyleTime)  # 2019-05-31 15:12:54
+
+#日期的加减
+def test4():
+    d1 = datetime.datetime.strptime('2019-05-31 15:12:54', '%Y-%m-%d %H:%M:%S')
+    d2 = datetime.datetime.strptime('2019-05-22 15:12:54', '%Y-%m-%d %H:%M:%S')
+    delta = d1 - d2
+    print(delta.days)  # 9  间隔9天
 
 #股票交易时间转序列号，时间从9:31--11:30,13:00--15:00,每分钟一档，共计240档，序列从0--239
 def stockTradeTime2Index(time):
@@ -274,31 +329,27 @@ def stockTradeTime2Index(time):
         11: lambda m: 89 + m,
         13: lambda m: 119 + m,
         14: lambda m: 179 + m,
-        15: lambda m: 239 if m == 0 else -1,
+        15: lambda m: 239 if m == 0 else -1
     }
     return switch[hour](min)
 
-#股票交易时间转序列号，时间从9:30--11:30,13:00--15:00,每分钟一档，共计240档，序列从0--239
+#股票交易序列号转时间，序列号从0--239，对应时间从9:31--11:30,13:00--15:00,每分钟一档，共计240档
 def stockTradeIndex2Time(index):
-    BASE = 30
+    if index < 0 or index > 239: return -1
+    BASE = 60
+    time_format = "{0:02d}:{1:02d}:00"
+    if index < 29:
+        return time_format.format(9,index +31)
+    elif index < 120:
+        index = index -30
+        switch = {0: 10, 1: 11}
+    else:
+        index = index -120
+        switch = {0: 13, 1: 14, 2: 15}
     phase = (index + 1) // BASE
     model = (index + 1) % BASE
-    time_format = "{0:02d}:{1:02d}:00"
-    #hour = int(arr[0])
-    #min = int(arr[1])
-    switch = {
-        0: lambda p, m: time_format.format(9, BASE * (phase + 1) + m),
-        1: lambda p, m: time_format.format(10, BASE * (phase + 1) + m),
-        2: lambda p, m: time_format.format(10, BASE * (phase + 1) + m),
-        3: lambda p, m: time_format.format(11, BASE * (phase + 1) + m),
-        4: lambda p, m: time_format.format(13, BASE * (phase + 1) + m),
-        5: lambda p, m: time_format.format(13, BASE * (phase + 1) + m),
-        6: lambda p, m: time_format.format(14, BASE * (phase + 1) + m),
-        7: lambda p, m: time_format.format(14, BASE * (phase + 1) + m),
-    }
 
-    print(phase,'--',model)
-    return switch[phase](phase,model)
+    return time_format.format(switch[phase],model)
 
 
 #time.strftime 方法来格式化日期
@@ -371,8 +422,10 @@ if __name__ == '__main__':
     #print(datetime2str2(dateobj))
     #print(type(datetime2str2(dateobj)))
 
-    #print(stockTradeTime2Index('15:00:00'))
-    print(stockTradeIndex2Time(29))
+    timestr = '09:31:00'
+    print(timestr, '--', stockTradeTime2Index(timestr) , '--', stockTradeIndex2Time(stockTradeTime2Index(timestr)))
+    #for i in range(240):
+        #print(i,'--',stockTradeIndex2Time(i))
     #now = datetime.datetime.now()
     #timeobj = datetime.time(hour=9, minute=30, second=17)
     #for i in range(60):
