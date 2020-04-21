@@ -38,17 +38,6 @@ class TdxLocalHelper:
         df = self.day_reader.get_df(config.tdx_local_sh_day + "sh000001.day")
         print(df)
 
-    #无用
-    def get_time(self,data):
-        print(data)
-        pydate_array = data
-        date_only_array = np.vectorize(lambda s: s.strftime('%Y-%m-%d'))(pydate_array)
-        date_only_series = pd.Series(date_only_array)
-        return date_only_series
-
-    def set_time_index(self,time_index):
-        return time_index * 2
-
     # 解析1分钟和5分钟数据
     #返回值：date: ope,high,low,close,amount,volume
     def read_tdx_local_minline(self, full_path,filename=""):
@@ -67,18 +56,16 @@ class TdxLocalHelper:
         df.reset_index(drop=True,inplace=True)  #参考：https://zhuanlan.zhihu.com/p/110819220?from_voters_page=true
         df.insert(5, 'time_index', df.index)
         #df['trade_time'] = pd.to_datetime(df['trade_time'], infer_datetime_format=True).dt.normalize()  # strftime('%m/%d/%Y') # format='%m/%d/%Y').dt.date
+        #df['trade_time'] = df['trade_time'].apply(lambda x: x.strftime('%H:%M:%S'))
         df['trade_time'] = pd.to_datetime(df['trade_time'], format='%H:%M:%S').dt.strftime('%H:%M:%S')
-        df['time_index'] = self.set_time_index(df['time_index'])
+        df['time_index'] = df['trade_time'].apply(lambda x: datatime_util.stockTradeTime2Index(x))
 
         csv_filename = config.tdx_csv_minline1 + filename[2:8] + "." + filename[0:2].upper() + ".csv"
-        print(df)
-        return
         if os.path.isfile(csv_filename):
             os.remove(csv_filename)
             df.to_csv(csv_filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
         else:
             df.to_csv(csv_filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
-
 
     # 解析板块数据
     #扁平格式返回值：blockname,block_type,code_index,code
@@ -166,4 +153,4 @@ class TdxLocalHelper:
 
 if __name__ == '__main__':
     tdx = TdxLocalHelper()
-    tdx.read_tdx_local_minline(config.tdx_local_sz_minline1 + "sz000001.lc1","sz000001.lc1")
+    #tdx.read_tdx_local_minline(config.tdx_local_sz_minline1 + "sz000001.lc1","sz000001.lc1")

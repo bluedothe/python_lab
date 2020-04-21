@@ -262,36 +262,43 @@ def nextmin(str):
     timeobj = datetime.date(hour=arr[0], minute=arr[1], second=arr[2])
 
 
-#股票交易时间转序列号，时间从9:30--11:30,13:00--15:00,每分钟一档，共计240档，序列从0--239
+#股票交易时间转序列号，时间从9:31--11:30,13:00--15:00,每分钟一档，共计240档，序列从0--239
 def stockTradeTime2Index(time):
     arr = time.split(':')
     index = -1
     hour = int(arr[0])
     min = int(arr[1])
     switch = {
-        "09": lambda h, m: m -30,
-        "10": lambda h, m: 30 + m,
-        "11": lambda h, m: 90 + m,
-        "13": lambda h, m: 120 + m,
-        "14": lambda h, m: 180 + m,
-        "15": lambda h, m: 239,
+        9: lambda m: m -31 if m > 30 else -1,
+        10: lambda m: 29 + m,
+        11: lambda m: 89 + m,
+        13: lambda m: 119 + m,
+        14: lambda m: 179 + m,
+        15: lambda m: 239 if m == 0 else -1,
     }
-    return switch[arr[0]](hour,min)
+    return switch[hour](min)
 
 #股票交易时间转序列号，时间从9:30--11:30,13:00--15:00,每分钟一档，共计240档，序列从0--239
 def stockTradeIndex2Time(index):
-    phase = index // 30
+    BASE = 30
+    phase = (index + 1) // BASE
+    model = (index + 1) % BASE
+    time_format = "{0:02d}:{1:02d}:00"
     #hour = int(arr[0])
     #min = int(arr[1])
     switch = {
-        "09": lambda h, m: m -30,
-        "10": lambda h, m: 30 + m,
-        "11": lambda h, m: 90 + m,
-        "13": lambda h, m: 120 + m,
-        "14": lambda h, m: 180 + m,
-        "15": lambda h, m: 239,
+        0: lambda p, m: time_format.format(9, BASE * (phase + 1) + m),
+        1: lambda p, m: time_format.format(10, BASE * (phase + 1) + m),
+        2: lambda p, m: time_format.format(10, BASE * (phase + 1) + m),
+        3: lambda p, m: time_format.format(11, BASE * (phase + 1) + m),
+        4: lambda p, m: time_format.format(13, BASE * (phase + 1) + m),
+        5: lambda p, m: time_format.format(13, BASE * (phase + 1) + m),
+        6: lambda p, m: time_format.format(14, BASE * (phase + 1) + m),
+        7: lambda p, m: time_format.format(14, BASE * (phase + 1) + m),
     }
-    #return switch[arr[0]](hour,min)
+
+    print(phase,'--',model)
+    return switch[phase](phase,model)
 
 
 #time.strftime 方法来格式化日期
@@ -364,7 +371,8 @@ if __name__ == '__main__':
     #print(datetime2str2(dateobj))
     #print(type(datetime2str2(dateobj)))
 
-    print(stockTradeTime2Index('14:57:00'))
+    #print(stockTradeTime2Index('15:00:00'))
+    print(stockTradeIndex2Time(29))
     #now = datetime.datetime.now()
     #timeobj = datetime.time(hour=9, minute=30, second=17)
     #for i in range(60):

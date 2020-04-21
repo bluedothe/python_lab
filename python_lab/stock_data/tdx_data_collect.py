@@ -85,4 +85,5 @@ class TdxDataCollect:
         print("--------tushare_index大盘指数追加完成------------")
 
 if __name__ == '__main__':
-    pass
+    dc = TdxDataCollect()
+    dc.get_init_minite()
