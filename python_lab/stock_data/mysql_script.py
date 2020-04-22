@@ -24,7 +24,8 @@ create database if not exists mydb default character set = 'utf8';
 
 create_database_common = "CREATE DATABASE if not exists {} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"
 
-drop_table_common = "drop table if exists {};"
+drop_table_common = "drop table if exists {};"   #删除表
+truncate_table_common = "truncate table if exists {};"    #清空表数据
 
 create_stock_basic = """
 /*==============================================================*/
@@ -83,6 +84,22 @@ create table collect_log
 insert_collect_log = "INSERT INTO collect_log(data_type,data_name,data_source,collect_start_time,collect_status) VALUES('{data_type}','{data_name}','{data_source}','{collect_start_time}','{collect_status}')"
 update_collect_log = "UPDATE collect_log SET data_end_date = '{data_end_date}', collect_end_time = '{collect_end_time}', collect_log = '{collect_log}', collect_status = '{collect_status}' WHERE id = {id}"
 
+create_index_basic = """
+/*==============================================================*/
+/* Table: index_basic                                           */
+/*==============================================================*/
+create table index_basic
+(
+   code                 varchar(16) comment '指数代码',
+   ts_code              varchar(16) not null comment '加市场标志的指数代码',
+   name                 varchar(16) comment '指数名称',
+   market               varchar(16) comment '市场类型 SH沪市，SZ深市',
+   primary key (ts_code)
+);
+
+"""
+
+insert_index_basic = "INSERT INTO index_basic(code, ts_code, name, market) VALUES('{code}', '{ts_code}', '{name}', '{market}')"
 
 def record_log(paras, is_insert=True):
     # paras = {"data_type":"tushare_history_all","data_name":"tushare交易数据，两个接口合并","data_source":"tusharepro+tushare","collect_start_time":"","collect_status":"R"}
@@ -95,7 +112,8 @@ def record_log(paras, is_insert=True):
 
 if __name__ == '__main__':
     #mysql.exec(drop_stock_basic)
-    #mysql.exec(create_stock_basic)
+    #mysql.exec(create_index_basic)
     #mysql.exec(insert_exam[0:-1])
     #mysql.exec(drop_table_common.format('collect_log'))
-    mysql.exec(create_collect_log)
+    #mysql.exec(create_collect_log)
+    pass

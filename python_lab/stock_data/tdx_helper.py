@@ -41,15 +41,35 @@ class TdxHelper:
         # pandas的mysql对象
         self.engine = create_engine(f'mysql+pymysql://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
 
-    #获取k线
+    #获取k线，最后一个参数day,说明需要获取的数量，本接口只获取从最近交易日往前的数据
     #输入参数：五个参数分别为：category（k线),市场代码(0:深圳，1:上海),股票代码,开始位置(从最近交易日向前取，0表示最近交易日),返回的记录条数
     #K线种类:  0 5分钟K线; 1 15分钟K线; 2 30分钟K线; 3 1小时K线; 4 日K线;5 周K线;6 月K线;7 1分钟;8 1分钟K线; 9 日K线;10 季K线;11 年K线
     #返回值：open,close,high,low,vol,amount,year,month,day,hour,minute,datetime
-    def get_security_bars(self):
+    # csv格式：code,ts_code,trade_date(缩写）,trade_time,time_index,open,high,low,close,amount,volume
+    def get_security_bars(self,category,market,code,count):
         if self.api.connect('119.147.212.81', 7709):
+            dict = {0:'SZ',1:'SH'}
+            ts_code = code + "." + dict[market]
+            order = ['code','ts_code','trade_date','trade_time','time_index','open','high','low','close','amount','volume']
             #df = self.api.get_security_bars(9, 0, '000001', 0, 10)  # 返回普通list
-            df = self.api.to_df(self.api.get_security_bars(9, 1, '600001', 6860, 100))  # 返回DataFrame
+            df = self.api.to_df(self.api.get_security_bars(category, market, code, 0, count))  # 返回DataFrame
+            if df.empty:return
+
+            df.insert(0, 'ts_code', ts_code)
+            df.insert(0, 'code', code)
+            df['trade_time'] = df['datetime'].apply(lambda x: str(x)[11:19])
+            df['time_index'] = df['trade_time'].apply(lambda x: datatime_util.stockTradeTime2Index(x))
+            df['trade_date'] = df['datetime'].apply(lambda x: str(x)[0:10])
+            df.rename(columns={'vol': 'volume'}, inplace=True)
+            df.drop(['year','month','day','hour','minute','datetime'], axis=1, inplace=True)
+            df = df[order]
             print(df)
+
+            filename = config.tdx_csv_minline1 + ts_code + ".csv"
+            if os.path.isfile(filename):
+                df.to_csv(filename, index=False, mode='a', header=False, sep=',', encoding="utf_8_sig")
+            else:
+                df.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
             self.api.disconnect()
 
     #可以获取多只股票的行情信息
@@ -75,7 +95,7 @@ class TdxHelper:
     #返回值：code,volunit,decimal_point,name,pre_close
     def get_security_list(self):
         if self.api.connect('119.147.212.81', 7709):
-            df = self.api.to_df(self.api.get_security_list(0, 3000))  # 市场代码, 起始位置 如： 0,0 或 1,100
+            df = self.api.to_df(self.api.get_security_list(0, 10000))  # 市场代码, 起始位置 如： 0,0 或 1,100
             print(df)
             self.api.disconnect()
 
@@ -185,4 +205,5 @@ class TdxHelper:
 
 if __name__ == '__main__':
     tdx = TdxHelper()
-    tdx.get_history_minute_time_data()
+    #tdx.get_security_bars(7, 0, '000001', 3*240)
+    tdx.get_security_count()

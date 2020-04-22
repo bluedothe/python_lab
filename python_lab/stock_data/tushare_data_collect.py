@@ -54,11 +54,26 @@ class TushareDataCollect:
 
     # 通过tusharepro接口获取股票基本信息，使用pymysql入库，每次都需要先删除表后重新创建表
     def get_stock_basic_one(self):
-        self.mysql.exec(mysql_script.drop_table_common.format("stock_basic"))
-        self.mysql.exec(mysql_script.create_stock_basic)
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_type": "stock_basic", "data_name": "股票基本信息",
+                 "data_source": "tusharepro", "collect_start_time": now, "collect_status": "R"}
+        log_id = mysql_script.record_log(paras)
+
+        self.mysql.exec(mysql_script.truncate_table_common.format("stock_basic"))
         self.tshelper.stock_basic_mysql_one("L")
         self.tshelper.stock_basic_mysql_one("D")
         self.tshelper.stock_basic_mysql_one("P")
+
+        today = datetime.datetime.now()
+        end_date = today.strftime('%Y-%m-%d')
+        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').date()
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_end_date": str(end_date), "collect_end_time": now,
+                 "collect_log": f"完成股票基础数据更新", "collect_status": "S", "id": log_id}
+        mysql_script.record_log(paras, False)
+
+        print("--------tusharepro股票基本信息更新完成------------")
+
 
     #采集交易数据，tusharepro+tushare
     #只在第一次采集的时候执行，以后执行追加方法
@@ -208,11 +223,12 @@ class TushareDataCollect:
         print("--------tusharepro日数据追加完成-----------------")
 
     #批量执行历史交易数据追加
-    def batch_execute(self):
+    def batch_execute_everyday(self):
+        self.get_stock_basic_one()  #更新股票基本信息
         self.get_history_by_date()   #追加tusharepro+tushare日交易数据
         self.get_history_pro_by_date()   #追加tusharepro日交易数据
         self.get_day_index_all()  #追加tushare的大盘指数
-        print("========批量执行完成=======")
+        print("========tushare数据更新，批量执行完成=======")
 
     #删除cvs文件中指定的行数据
     def del_cvs_rows(self):
@@ -355,7 +371,7 @@ if __name__ == '__main__':
     #dc.get_day_index_all()
     #dc.get_history_pro_by_date()
     #dc.get_history_by_date()
-    dc.batch_execute()   #批量执行
+    #dc.batch_execute_everyday()   #批量执行
 
     #dc.update_value()
     #dc.del_cvs_rows()

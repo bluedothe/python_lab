@@ -38,29 +38,76 @@ class TdxLocalHelper:
         df = self.day_reader.get_df(config.tdx_local_sh_day + "sh000001.day")
         print(df)
 
+    # 批量格式化日期字段，去掉分隔符
+    def format_date(self, date):
+        return ((str(date))[0:10]).replace('-', '')
+
     # 解析1分钟和5分钟数据
-    #返回值：date: ope,high,low,close,amount,volume
-    def read_tdx_local_minline(self, full_path,filename=""):
+    #返回值：date: open,high,low,close,amount,volume
+    #csv格式：code,ts_code,trade_date(缩写）,trade_time,time_index,open,high,low,close,amount,volume
+    def read_tdx_local_minline_all(self, full_path,filename=""):
         #df = reader.get_df(config.tdx_local_sz_minline1 + "sz399001.lc1")
         #df = reader.get_df(config.tdx_local_sz_minline5 + "sz399001.lc5")
         #df = self.minline_reader.get_df(config.tdx_local_sh_minline1 + "sh600300.lc1")
-        ts_code = filename[2:8] + "." + filename[0:2].upper()
         code = filename[2:8]
+        ts_code = code + "." + filename[0:2].upper()
+
         df = self.minline_reader.get_df(full_path)
 
         df.insert(0, 'trade_time', df.index)
         df.insert(0, 'trade_date', df.index.floor('D'))
         df.insert(0, 'ts_code', ts_code)
         df.insert(0, 'code', code)
-        df.insert(0, 'trade_date_time', df.index)
         df.reset_index(drop=True,inplace=True)  #参考：https://zhuanlan.zhihu.com/p/110819220?from_voters_page=true
-        df.insert(5, 'time_index', df.index)
+        df.insert(4, 'time_index', df.index)
         #df['trade_time'] = pd.to_datetime(df['trade_time'], infer_datetime_format=True).dt.normalize()  # strftime('%m/%d/%Y') # format='%m/%d/%Y').dt.date
         #df['trade_time'] = df['trade_time'].apply(lambda x: x.strftime('%H:%M:%S'))
         df['trade_time'] = pd.to_datetime(df['trade_time'], format='%H:%M:%S').dt.strftime('%H:%M:%S')
         df['time_index'] = df['trade_time'].apply(lambda x: datatime_util.stockTradeTime2Index(x))
+        df['trade_date'] = df['trade_date'].apply(lambda x: self.format_date(x))
+        df['open'] = df['open'].apply(lambda x: round(x,2))
+        df['high'] = df['high'].apply(lambda x: round(x, 2))
+        df['low'] = df['low'].apply(lambda x: round(x, 2))
+        df['close'] = df['close'].apply(lambda x: round(x, 2))
 
-        csv_filename = config.tdx_csv_minline1 + filename[2:8] + "." + filename[0:2].upper() + ".csv"
+        csv_filename = config.tdx_csv_minline1_all + ts_code + ".csv"
+        if os.path.isfile(csv_filename):
+            os.remove(csv_filename)
+            df.to_csv(csv_filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
+        else:
+            df.to_csv(csv_filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
+
+    # 解析1分钟和5分钟数据，输出简单形式，只返回price和vol
+    # 返回值：date: open,high,low,close,amount,volume
+    # csv格式：code,ts_code,trade_date(缩写）,trade_time,time_index,price,volume
+    def read_tdx_local_minline_simple(self, full_path, filename=""):
+        # df = reader.get_df(config.tdx_local_sz_minline1 + "sz399001.lc1")
+        # df = reader.get_df(config.tdx_local_sz_minline5 + "sz399001.lc5")
+        # df = self.minline_reader.get_df(config.tdx_local_sh_minline1 + "sh600300.lc1")
+        code = filename[2:8]
+        ts_code = code + "." + filename[0:2].upper()
+
+        df = self.minline_reader.get_df(full_path)
+
+        df.insert(0, 'trade_time', df.index)
+        df.insert(0, 'trade_date', df.index.floor('D'))
+        df.insert(0, 'ts_code', ts_code)
+        df.insert(0, 'code', code)
+        df.reset_index(drop=True, inplace=True)  # 参考：https://zhuanlan.zhihu.com/p/110819220?from_voters_page=true
+        df.insert(4, 'time_index', df.index)
+        # df['trade_time'] = pd.to_datetime(df['trade_time'], infer_datetime_format=True).dt.normalize()  # strftime('%m/%d/%Y') # format='%m/%d/%Y').dt.date
+        # df['trade_time'] = df['trade_time'].apply(lambda x: x.strftime('%H:%M:%S'))
+        df['trade_time'] = pd.to_datetime(df['trade_time'], format='%H:%M:%S').dt.strftime('%H:%M:%S')
+        df['time_index'] = df['trade_time'].apply(lambda x: datatime_util.stockTradeTime2Index(x))
+        df['trade_date'] = df['trade_date'].apply(lambda x: self.format_date(x))
+        #df['open'] = df['open'].apply(lambda x: round(x, 2))
+        #df['high'] = df['high'].apply(lambda x: round(x, 2))
+        #df['low'] = df['low'].apply(lambda x: round(x, 2))
+        df['close'] = df['close'].apply(lambda x: round(x, 2))
+        df.rename(columns={'close': 'price'}, inplace=True)
+        df.drop(['open', 'high', 'low', 'amount'], axis=1, inplace=True)
+
+        csv_filename = config.tdx_csv_minline1_simple + ts_code + ".csv"
         if os.path.isfile(csv_filename):
             os.remove(csv_filename)
             df.to_csv(csv_filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
@@ -153,4 +200,4 @@ class TdxLocalHelper:
 
 if __name__ == '__main__':
     tdx = TdxLocalHelper()
-    #tdx.read_tdx_local_minline(config.tdx_local_sz_minline1 + "sz000001.lc1","sz000001.lc1")
+    tdx.read_tdx_local_minline_simple(config.tdx_local_sz_minline1 + "sz000001.lc1","sz000001.lc1")
