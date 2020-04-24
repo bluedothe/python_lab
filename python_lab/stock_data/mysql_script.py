@@ -25,7 +25,7 @@ create database if not exists mydb default character set = 'utf8';
 create_database_common = "CREATE DATABASE if not exists {} DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"
 
 drop_table_common = "drop table if exists {};"   #删除表
-truncate_table_common = "truncate table if exists {};"    #清空表数据
+truncate_table_common = "truncate table {};"    #清空表数据
 
 create_stock_basic = """
 /*==============================================================*/
@@ -112,7 +112,7 @@ def record_log(paras, is_insert=True):
 
 if __name__ == '__main__':
     #mysql.exec(drop_stock_basic)
-    #mysql.exec(create_index_basic)
+    mysql.exec(create_index_basic)
     #mysql.exec(insert_exam[0:-1])
     #mysql.exec(drop_table_common.format('collect_log'))
     #mysql.exec(create_collect_log)

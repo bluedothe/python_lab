@@ -59,17 +59,19 @@ class TdxHelper:
             df.insert(0, 'code', code)
             df['trade_time'] = df['datetime'].apply(lambda x: str(x)[11:19])
             df['time_index'] = df['trade_time'].apply(lambda x: datatime_util.stockTradeTime2Index(x))
-            df['trade_date'] = df['datetime'].apply(lambda x: str(x)[0:10])
+            df['trade_date'] = df['datetime'].apply(lambda x: (str(x)[0:10]).replace('-', ''))
             df.rename(columns={'vol': 'volume'}, inplace=True)
             df.drop(['year','month','day','hour','minute','datetime'], axis=1, inplace=True)
+            df['volume'] = df['volume'].apply(lambda x: int(x))  #取整
+            df.loc[df['amount'] == 5.877471754111438e-39, 'amount'] = 0   #列值根据条件筛选后修改为0
             df = df[order]
-            print(df)
 
-            filename = config.tdx_csv_minline1 + ts_code + ".csv"
+            filename = config.tdx_csv_minline1_all + ts_code + ".csv"
             if os.path.isfile(filename):
                 df.to_csv(filename, index=False, mode='a', header=False, sep=',', encoding="utf_8_sig")
             else:
                 df.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
+                print("新增加的一分钟all股票数据：", filename)
             self.api.disconnect()
 
     #可以获取多只股票的行情信息

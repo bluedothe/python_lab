@@ -50,7 +50,40 @@ class TdxDataCollect:
         pass
 
     def append_minite1_all(self):
-        pass
+        data_type = 'tdx_minline1'
+        today = datetime.datetime.now()
+        today_str = today.strftime('%Y-%m-%d')
+
+        last_data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",data_type)
+        if last_data_end_date[0][0] == None:
+            start_date = today_str
+        else:
+            start_date = last_data_end_date[0][0] + datetime.timedelta(days=1)
+
+        end_date = datetime.datetime.strptime(today_str, '%Y-%m-%d').date()
+        if start_date > end_date:
+            print("今天的数据已经更新完成，不必重复执行!")
+            return
+
+        records = self.mysql.select("select ts_code from stock_basic")
+        if len(records) == 0: return
+        day = (end_date - start_date).days + 1
+
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_type": data_type, "data_name": "tdx1分钟数据",
+                 "data_source": "tdx", "collect_start_time": now, "collect_status": "R"}
+        log_id = mysql_script.record_log(paras)
+
+        for stock in records:
+            ts_code = stock[0]
+            market = {'SZ':0,'SH':1}
+            self.tdxhelper.get_security_bars(7, market[ts_code[7:9]], ts_code[0:6], 240 * day)   #count=240 * day
+
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        paras = {"data_end_date": str(end_date), "collect_end_time": now, "collect_log": f"一次性完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
+        mysql_script.record_log(paras, False)
+
+        print("--------追加tdx1分钟数据初始化完成------------")
 
     def append_minite1_simple(self):
         pass
@@ -132,7 +165,7 @@ class TdxDataCollect:
     #遍历目录，插入指数数据
     @printHelper.time_this_function
     def execute_insert_tdx_index(self):
-        file_util.traversal_dir(config.tdx_csv_minline1_simple, self.insert_tdx_index)
+        file_util.traversal_dir(config.tdx_csv_minline1_all, self.insert_tdx_index)
 
     #删除无用的指数数据,临时执行一次
     def delete_index_file(self):
@@ -144,8 +177,9 @@ class TdxDataCollect:
 
     #每天批量执行更新数据
     def batch_execute_everyday(self):
-        pass
+        self.append_minite1_all()
 
 if __name__ == '__main__':
     dc = TdxDataCollect()
-    dc.delete_index_file()
+    #dc.batch_execute_everyday()
+    dc.execute_insert_tdx_index()

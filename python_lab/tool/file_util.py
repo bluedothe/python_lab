@@ -38,4 +38,4 @@ def delete_file(fileName):
             pass
 
 if __name__ == '__main__':
-    pass
+    print(os.path.isfile('E:/doc/design/dbmodel/yy'))

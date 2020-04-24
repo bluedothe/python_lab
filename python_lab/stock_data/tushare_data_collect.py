@@ -365,7 +365,7 @@ class TushareDataCollect:
 if __name__ == '__main__':
     dc = TushareDataCollect()
     #dc.get_stock_basic_pandas()
-    #dc.get_stock_basic_one()
+    dc.get_stock_basic_one()
     #dc.get_stock_history()
     #dc.get_stock_history_pro()
     #dc.get_day_index_all()
