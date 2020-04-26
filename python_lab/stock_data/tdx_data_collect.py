@@ -46,6 +46,9 @@ class TdxDataCollect:
         self.engine = create_engine(
             f'mysql+pymysql://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
 
+    def tdx_close_connect(self):
+        self.tdxhelper.close_connect()
+
     def get_block(self):
         pass
 
@@ -84,13 +87,13 @@ class TdxDataCollect:
                 if len(file_modify_time_flag) > 0:
                     mtime = os.stat(filename).st_mtime
                     file_modify_time = time.strftime('%Y-%m-%d', time.localtime(mtime))  #file_modify_time是字符串
-                    if file_modify_time > file_modify_time_flag:break
+                    if file_modify_time > file_modify_time_flag:continue
 
                 #获取csv文件中数据的最后日期，如果该日期大于或等于end_date则说明数据已经完成采集，忽略该文件；
                 #如果csv文件中数据的最后日期大于从数据库日志中获取的上次更新日期last_data_end_date，则修改last_data_end_date为文件中的最后日期
                 df = pd.read_csv(filename)
                 last_file_end_date = df.max()['trade_date']  #last_file_end_date是int类型
-                if last_file_end_date >= int(str(end_date).replace('-', '')):break
+                if last_file_end_date >= int(str(end_date).replace('-', '')):continue
                 if last_file_end_date >= int(str(last_data_end_date).replace('-', '')):
                     start_date = datetime.date(year=int((str(last_file_end_date))[0:4]), month=int((str(last_file_end_date))[4:6]), day=int((str(last_file_end_date))[6:8])) + datetime.timedelta(days=1)
                 else:
@@ -98,10 +101,9 @@ class TdxDataCollect:
             else:
                 start_date = last_data_end_date + datetime.timedelta(days=1)
             self.tdxhelper.get_minute1_data(7, market[ts_code[7:9]],ts_code[0:6], str(start_date), str(end_date))
-        self.tdxhelper.close_connect()
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        paras = {"data_end_date": str(end_date), "collect_end_time": now, "collect_log": f"一次性完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
+        paras = {"data_end_date": str(end_date), "collect_end_time": now, "collect_log": f"完成{end_date}的数据采集", "collect_status": "S", "id": log_id}
         mysql_script.record_log(paras, False)
 
         print("--------追加tdx1分钟数据初始化完成------------")
@@ -204,3 +206,4 @@ if __name__ == '__main__':
     dc = TdxDataCollect()
     dc.batch_execute_everyday()
     #dc.execute_insert_tdx_index()
+    dc.tdx_close_connect()

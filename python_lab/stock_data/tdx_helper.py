@@ -235,11 +235,13 @@ class TdxHelper:
             n = (day - 3) // 3
             m = (day - 3) % 3
             for i in range(0, n):
-                dfn = self.get_security_bars_minute1(category, market, code, 240 * 3 * i, 240 * 3)  # 返回DataFrame
-                if (not (dfn is None)) and (not dfn.empty): df = dfn.append(df,ignore_index=True)
+                dfn = self.get_security_bars_minute1(category, market, code, 240 * 3 * (i + 1), 240 * 3)  # 返回DataFrame
+                if (dfn is not None) and (not dfn.empty):
+                    df = dfn.append(df,ignore_index=True)
             if m > 0:
-                dfn = self.get_security_bars_minute1(category, market, code, 240 * 3 * (n + 1), 240 * m)  # count=240 * day
-                if (not (dfn is None)) and (not dfn.empty): df = dfn.append(df,ignore_index=True)
+                dfn = self.get_security_bars_minute1(category, market, code, 240 * 3 * (n + 1), 240 * m)
+                if (dfn is not None) and (not dfn.empty):
+                    df = dfn.append(df,ignore_index=True)
 
         df = df.sort_values(by=['trade_date','time_index'], axis=0, ascending=True)
         #过滤掉start_date, end_date之外的数据
@@ -259,5 +261,8 @@ if __name__ == '__main__':
     tdx = TdxHelper()
     #tdx.get_security_bars(7, 0, '000001',2*240, 1*240)
     #tdx.get_security_count()
-    tdx.get_minute1_data(7, 0, '000518','2020-04-21', '2020-04-25')
+    #tdx.get_minute1_data(7, 0, '000518','2020-04-21', '2020-04-25')
+    dfn = tdx.get_security_bars_minute1(7, 0, '000518',720 ,720)
+    print(dfn is not None)
+    print(not dfn.empty)
     tdx.close_connect()
