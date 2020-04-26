@@ -13,12 +13,12 @@ from stock_data.tdx_data_collect import TdxDataCollect
 
 class DataCollect:
     def __init__(self):
-        self.thshare_dc = TushareDataCollect()
+        self.tushare_dc = TushareDataCollect()
         self.tdx_dc = TdxDataCollect()
 
     def batch_execute(self):
-        self.thshare_dc.batch_execute_everyday()
-        #self.tdx_dc.batch_execute_everyday()
+        #self.tushare_dc.batch_execute_everyday()
+        self.tdx_dc.batch_execute_everyday()
 
 if __name__ == '__main__':
     dc = DataCollect()

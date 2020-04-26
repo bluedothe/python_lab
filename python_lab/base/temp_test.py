@@ -117,5 +117,15 @@ def test7():
 def test8(full_path, file):
     print("文件路径:{},{}".format(full_path, file))
 
+def test9():
+    for i in range(5,0,-1):
+        print(i)
+    for i in range(0,1):
+        print(i)
+
+def test10():
+    print(6//3)
+
 if __name__ == '__main__':
-    file_util.traversal_dir("D:/Temp/android/HelloWorld/res",test8)
+    #file_util.traversal_dir("D:/Temp/android/HelloWorld/res",test8)
+    test9()

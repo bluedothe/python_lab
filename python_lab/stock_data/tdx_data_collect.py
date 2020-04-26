@@ -65,19 +65,30 @@ class TdxDataCollect:
             print("今天的数据已经更新完成，不必重复执行!")
             return
 
-        records = self.mysql.select("select ts_code from stock_basic")
+        records = self.mysql.select("select ts_code from stock_basic where list_status='L'")
         if len(records) == 0: return
-        day = (end_date - start_date).days + 1
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": data_type, "data_name": "tdx1分钟数据",
                  "data_source": "tdx", "collect_start_time": now, "collect_status": "R"}
         log_id = mysql_script.record_log(paras)
 
+        market = {'SZ': 0, 'SH': 1}
         for stock in records:
             ts_code = stock[0]
-            market = {'SZ':0,'SH':1}
-            self.tdxhelper.get_security_bars(7, market[ts_code[7:9]], ts_code[0:6], 240 * day)   #count=240 * day
+            filename = config.tdx_csv_minline1_all + ts_code + ".csv"
+            if os.path.isfile(filename):
+                df = pd.read_csv(filename)
+                last_file_end_date = df.max()['trade_date']
+                if last_file_end_date >= int(str(end_date).replace('-', '')):break
+                if last_file_end_date >= int(str(start_date).replace('-', '')):
+                    fact_start_date = datetime.date(year=int((str(last_file_end_date))[0:4]), month=int((str(last_file_end_date))[4:6]), day=int((str(last_file_end_date))[6:8])) + datetime.timedelta(days=1)
+                else:
+                    fact_start_date = start_date
+            else:
+                fact_start_date = start_date
+            self.tdxhelper.get_minute1_data(7, market[ts_code[7:9]],ts_code[0:6], str(fact_start_date), str(end_date))
+        self.tdxhelper.close_connect()
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now, "collect_log": f"一次性完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
@@ -181,5 +192,5 @@ class TdxDataCollect:
 
 if __name__ == '__main__':
     dc = TdxDataCollect()
-    #dc.batch_execute_everyday()
-    dc.execute_insert_tdx_index()
+    dc.batch_execute_everyday()
+    #dc.execute_insert_tdx_index()

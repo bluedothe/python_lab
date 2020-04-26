@@ -26,6 +26,7 @@ create_database_common = "CREATE DATABASE if not exists {} DEFAULT CHARACTER SET
 
 drop_table_common = "drop table if exists {};"   #删除表
 truncate_table_common = "truncate table {};"    #清空表数据
+delete_table_common = "delete from table {};"    #清空表数据
 
 create_stock_basic = """
 /*==============================================================*/
