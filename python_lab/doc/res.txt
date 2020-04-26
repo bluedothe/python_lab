@@ -27,4 +27,20 @@ https://blog.csdn.net/CHCH998/article/details/103713150
 通达信目录文件说明：http://www.360doc.com/content/12/0525/07/128891_213526909.shtml
 
 时间日期工具函数
-https://www.csdn.net/gather_20/MtzaAg5sODQwLWJsb2cO0O0O.html说
+https://www.csdn.net/gather_20/MtzaAg5sODQwLWJsb2cO0O0O.html
+
+pandans
+https://www.jianshu.com/p/7ac36fafebea
+https://www.cnblogs.com/guxh/p/9451532.html
+https://blog.csdn.net/gdkyxy2013/article/details/80785361
+https://www.jb51.net/article/166677.htm
+https://www.cnblogs.com/super999/p/11757158.html
+https://www.cnblogs.com/Forever77/p/11285302.html
+http://www.cocoachina.com/articles/54057
+https://blog.csdn.net/oYeZhou/article/details/82378160?utm_source=blogxgwz6
+https://blog.csdn.net/sinat_27339001/article/details/78459272?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-4&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-4
+https://blog.csdn.net/tz_zs/article/details/81252710?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-3&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-3
+https://blog.csdn.net/missyougoon/article/details/83573103?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2
+https://blog.csdn.net/sinat_26811377/article/details/102842187?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2
+https://www.cnblogs.com/komean/p/11063480.html
+http://www.360doc.com/content/20/0419/11/67871753_907003847.shtml
