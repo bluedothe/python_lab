@@ -422,8 +422,8 @@ if __name__ == '__main__':
     #print(datetime2str2(dateobj))
     #print(type(datetime2str2(dateobj)))
 
-    timestr = '09:31:00'
-    print(timestr, '--', stockTradeTime2Index(timestr) , '--', stockTradeIndex2Time(stockTradeTime2Index(timestr)))
+    #timestr = '09:31:00'
+    #print(timestr, '--', stockTradeTime2Index(timestr) , '--', stockTradeIndex2Time(stockTradeTime2Index(timestr)))
     #for i in range(240):
         #print(i,'--',stockTradeIndex2Time(i))
     #now = datetime.datetime.now()
@@ -431,5 +431,7 @@ if __name__ == '__main__':
     #for i in range(60):
     #    timeobj = (timeobj + datetime.timedelta(minutes=1)).strftime("%H:%M:%S")
     #    print(timeobj)
+    #print(str2date(strdate))
+    print(date_str>strdate)
 
 

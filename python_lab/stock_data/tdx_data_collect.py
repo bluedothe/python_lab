@@ -49,26 +49,28 @@ class TdxDataCollect:
     def get_block(self):
         pass
 
-    def append_minite1_all(self):
+    #增加分钟数据
+    #第一个参数，如果没有数据库日志记录，也就是本函数第一次执行，需要制定默认开始时间；第二个参数指定一个时间，对这个时间之后更新的文件不处理
+    #两个参数的格式都为'%Y-%m-%d'字符串格式,last_file_modify_time不指定则不校验
+    def append_minite1_all(self,default_start_date = "", file_modify_time_flag = ""):
         data_type = 'tdx_minline1'
         today = datetime.datetime.now()
         today_str = today.strftime('%Y-%m-%d')
 
-        last_data_end_date = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",data_type)
-        if last_data_end_date[0][0] == None:
-            start_date = today_str
-        else:
-            start_date = last_data_end_date[0][0] + datetime.timedelta(days=1)
+        last_data_end_date_record = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",data_type)
+        last_data_end_date = last_data_end_date_record[0][0]   #last_data_end_date是日期类型
+        if last_data_end_date == None:
+            last_data_end_date = datatime_util.str2date(default_start_date) - datetime.timedelta(days=1)
 
-        end_date = datetime.datetime.strptime(today_str, '%Y-%m-%d').date()
-        if start_date > end_date:
+        end_date = datetime.datetime.strptime(today_str, '%Y-%m-%d').date()  #end_date是日期类型
+        if last_data_end_date >= end_date:    #日志记录的
             print("今天的数据已经更新完成，不必重复执行!")
             return
 
         records = self.mysql.select("select ts_code from stock_basic where list_status='L'")
         if len(records) == 0: return
 
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = time.strftime("%Y-%m-%d %H:%M:%S")      #now是字符串
         paras = {"data_type": data_type, "data_name": "tdx1分钟数据",
                  "data_source": "tdx", "collect_start_time": now, "collect_status": "R"}
         log_id = mysql_script.record_log(paras)
@@ -78,16 +80,24 @@ class TdxDataCollect:
             ts_code = stock[0]
             filename = config.tdx_csv_minline1_all + ts_code + ".csv"
             if os.path.isfile(filename):
+                #获取文件更新时间，更新时间在某个时间之后的忽略
+                if len(file_modify_time_flag) > 0:
+                    mtime = os.stat(filename).st_mtime
+                    file_modify_time = time.strftime('%Y-%m-%d', time.localtime(mtime))  #file_modify_time是字符串
+                    if file_modify_time > file_modify_time_flag:break
+
+                #获取csv文件中数据的最后日期，如果该日期大于或等于end_date则说明数据已经完成采集，忽略该文件；
+                #如果csv文件中数据的最后日期大于从数据库日志中获取的上次更新日期last_data_end_date，则修改last_data_end_date为文件中的最后日期
                 df = pd.read_csv(filename)
-                last_file_end_date = df.max()['trade_date']
+                last_file_end_date = df.max()['trade_date']  #last_file_end_date是int类型
                 if last_file_end_date >= int(str(end_date).replace('-', '')):break
-                if last_file_end_date >= int(str(start_date).replace('-', '')):
-                    fact_start_date = datetime.date(year=int((str(last_file_end_date))[0:4]), month=int((str(last_file_end_date))[4:6]), day=int((str(last_file_end_date))[6:8])) + datetime.timedelta(days=1)
+                if last_file_end_date >= int(str(last_data_end_date).replace('-', '')):
+                    start_date = datetime.date(year=int((str(last_file_end_date))[0:4]), month=int((str(last_file_end_date))[4:6]), day=int((str(last_file_end_date))[6:8])) + datetime.timedelta(days=1)
                 else:
-                    fact_start_date = start_date
+                    start_date = last_data_end_date + datetime.timedelta(days=1)
             else:
-                fact_start_date = start_date
-            self.tdxhelper.get_minute1_data(7, market[ts_code[7:9]],ts_code[0:6], str(fact_start_date), str(end_date))
+                start_date = last_data_end_date + datetime.timedelta(days=1)
+            self.tdxhelper.get_minute1_data(7, market[ts_code[7:9]],ts_code[0:6], str(start_date), str(end_date))
         self.tdxhelper.close_connect()
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -188,7 +198,7 @@ class TdxDataCollect:
 
     #每天批量执行更新数据
     def batch_execute_everyday(self):
-        self.append_minite1_all()
+        self.append_minite1_all(default_start_date = "20200112", file_modify_time_flag = "")
 
 if __name__ == '__main__':
     dc = TdxDataCollect()
