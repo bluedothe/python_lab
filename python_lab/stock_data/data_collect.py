@@ -17,7 +17,7 @@ class DataCollect:
         self.tdx_dc = TdxDataCollect()
 
     def batch_execute(self):
-        self.tushare_dc.batch_execute_everyday() #1更新股票信息；2追加tusharepro+tushare日线数据；3追加tusharepro;4追加指数日线数据；
+        #self.tushare_dc.batch_execute_everyday() #1更新股票信息；2追加tusharepro+tushare日线数据；3追加tusharepro;4追加指数日线数据；
 
         self.tdx_dc.batch_execute_everyday() #1追加分钟数据；
         self.tdx_dc.tdx_close_connect()

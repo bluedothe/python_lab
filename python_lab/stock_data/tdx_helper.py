@@ -101,6 +101,15 @@ class TdxHelper:
         df['volume'] = df['volume'].apply(lambda x: int(x))  # 取整
         df.loc[df['amount'] == 5.877471754111438e-39, 'amount'] = 0  # 列值根据条件筛选后修改为0
         df = df[order]
+
+        #过滤掉停牌的数据，在tdx中，停牌股票也能取到数据，价格是前一交易日的收盘价，所以只能用成交量或成交金额为0来判断
+        #1按日期分组后取出成交量为0的日期；2循环过滤掉成交量为0的日期的数据。
+        dfg = df.groupby(by = 'trade_date').mean()  #分组
+        dfg['trade_date'] = dfg.index
+        dfg = dfg[dfg.volume == 0]  #条件过滤，保留满足条件的数据
+        for trade_date in dfg['trade_date'].values:
+            df = df[(df['trade_date'] != trade_date)]  # 每个条件要用括号()括起来
+
         return df
 
     #可以获取多只股票的行情信息
@@ -262,7 +271,8 @@ if __name__ == '__main__':
     #tdx.get_security_bars(7, 0, '000001',2*240, 1*240)
     #tdx.get_security_count()
     #tdx.get_minute1_data(7, 0, '000518','2020-04-21', '2020-04-25')
-    dfn = tdx.get_security_bars_minute1(7, 0, '000518',720 ,720)
+    dfn = tdx.get_security_bars_minute1(7, 0, '000029',0 ,720)
     print(dfn is not None)
     print(not dfn.empty)
+    print(dfn)
     tdx.close_connect()
