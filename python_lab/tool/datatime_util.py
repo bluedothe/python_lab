@@ -400,6 +400,7 @@ if __name__ == '__main__':
     date_time = "2016-03-20 11:45:39"
     date_str = "2020-04-14"
     strdate = '2017-01-01'
+    timestr = '09:31:00'
     date_str_abbr = "20200414"
     dateobj = datetime.date(year=1992, month=3, day=17)
     todayobj = datetime.date.today()
@@ -422,7 +423,7 @@ if __name__ == '__main__':
     #print(datetime2str2(dateobj))
     #print(type(datetime2str2(dateobj)))
 
-    #timestr = '09:31:00'
+
     #print(timestr, '--', stockTradeTime2Index(timestr) , '--', stockTradeIndex2Time(stockTradeTime2Index(timestr)))
     #for i in range(240):
         #print(i,'--',stockTradeIndex2Time(i))
