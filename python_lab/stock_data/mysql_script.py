@@ -26,7 +26,7 @@ create_database_common = "CREATE DATABASE if not exists {} DEFAULT CHARACTER SET
 
 drop_table_common = "drop table if exists {};"   #删除表
 truncate_table_common = "truncate table {};"    #清空表数据
-delete_table_common = "delete from table {};"    #清空表数据
+delete_table_common = "delete from {};"    #清空表数据
 
 create_stock_basic = """
 /*==============================================================*/
@@ -82,8 +82,9 @@ create table collect_log
 );
 """
 
-insert_collect_log = "INSERT INTO collect_log(data_type,data_name,data_source,collect_start_time,collect_status) VALUES('{data_type}','{data_name}','{data_source}','{collect_start_time}','{collect_status}')"
-update_collect_log = "UPDATE collect_log SET data_end_date = '{data_end_date}', collect_end_time = '{collect_end_time}', collect_log = '{collect_log}', collect_status = '{collect_status}' WHERE id = {id}"
+insert_collect_log_before = "INSERT INTO collect_log(data_type,data_name,data_source,collect_start_time,collect_status) VALUES('{data_type}','{data_name}','{data_source}','{collect_start_time}','{collect_status}')"
+update_collect_log_after = "UPDATE collect_log SET data_end_date = '{data_end_date}', collect_end_time = '{collect_end_time}', collect_log = '{collect_log}', collect_status = '{collect_status}' WHERE id = {id}"
+insert_collect_log = "INSERT INTO collect_log(data_type,data_name,data_source,data_end_date,collect_start_time,collect_end_time,collect_log,collect_status) VALUES('{data_type}','{data_name}','{data_source}','{data_end_date}','{collect_start_time}','{collect_end_time}','{collect_log}','{collect_status}')"
 
 create_index_basic = """
 /*==============================================================*/
@@ -102,19 +103,58 @@ create table index_basic
 
 insert_index_basic = "INSERT INTO index_basic(code, ts_code, name, market) VALUES('{code}', '{ts_code}', '{name}', '{market}')"
 
-def record_log(paras, is_insert=True):
+create_block_member = """
+/*==============================================================*/
+/* Table: block_member                                          */
+/*==============================================================*/
+create table block_member
+(
+   data_source          varchar(16) not null,
+   block_category       varchar(16) not null,
+   block_type           varchar(16) not null comment '板块类型：1普通板块；2风格板块；3概念板块；4指数板块',
+   block_name           varchar(16) not null comment '板块名称',
+   block_code           varchar(16) not null,
+   ts_code              varchar(16) not null,
+   create_time          datetime,
+   primary key (data_source, block_name, block_type, block_category, block_code, ts_code)
+);
+
+"""
+
+create_block_basic = """
+/*==============================================================*/
+/* Table: block_basic                                           */
+/*==============================================================*/
+create table block_basic
+(
+   data_source          varchar(16) not null comment '板块分类来源',
+   block_category       varchar(16) not null comment '板块种类',
+   block_type           varchar(16) not null comment '板块分类',
+   block_name           varchar(16) not null comment '板块名称',
+   block_code           varchar(16) not null comment '板块代码',
+   stock_count          int comment '成分股数量',
+   create_time          datetime,
+   primary key (data_source, block_category, block_type, block_name, block_code)
+);
+
+"""
+
+def record_log(paras, flag = 'all'):
     # paras = {"data_type":"tushare_history_all","data_name":"tushare交易数据，两个接口合并","data_source":"tusharepro+tushare","collect_start_time":"","collect_status":"R"}
     # paras = {"data_end_date":"","collect_end_time":"","collect_log":"sucess", "collect_status":"S","id":1}
-    if is_insert:
+    if flag == 'before':
+        id = mysql.insert_one(insert_collect_log_before.format(**paras))
+        return id
+    elif flag == 'after':
+        mysql.exec(update_collect_log_after.format(**paras))
+    else:
         id = mysql.insert_one(insert_collect_log.format(**paras))
         return id
-    else:
-        mysql.exec(update_collect_log.format(**paras))
 
 if __name__ == '__main__':
-    #mysql.exec(drop_stock_basic)
-    mysql.exec(create_index_basic)
+    #mysql.exec(drop_stock_basic) #删除表
+    #mysql.exec(create_block_basic) #建表
     #mysql.exec(insert_exam[0:-1])
-    #mysql.exec(drop_table_common.format('collect_log'))
-    #mysql.exec(create_collect_log)
+    #mysql.exec(drop_table_common.format('collect_log'))  #删除表
+    mysql.exec(delete_table_common.format("block_member where data_source = 'tdx'"))  #删除表中记录
     pass

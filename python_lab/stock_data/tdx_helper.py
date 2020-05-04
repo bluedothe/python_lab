@@ -16,6 +16,8 @@ from pytdx.hq import TdxHq_API,TDXParams
 from pytdx.exhq import TdxExHq_API
 from pytdx.config.hosts import hq_hosts
 from sqlalchemy import create_engine
+from sqlalchemy.types import NVARCHAR, Float, Integer, DateTime, BigInteger
+import datetime,time
 
 from db.mysqlHelper import mysqlHelper
 from stock_data import bluedothe
@@ -23,6 +25,7 @@ from stock_data import config
 from tool import printHelper
 from tool import datatime_util
 from tool import file_util
+from stock_data import mysql_script
 
 class TdxHelper:
     ip_list = [{'ip': '119.147.212.81', 'port': 7709},{'ip': '60.12.136.250', 'port': 7709}]
@@ -34,7 +37,7 @@ class TdxHelper:
 
         # pandas数据显示设置
         pd.set_option('display.max_columns', None)  # 显示所有列
-        pd.set_option('display.max_rows', None)  # 显示所有行
+        #pd.set_option('display.max_rows', None)  # 显示所有行
 
         # mysql对象
         self.mysql = mysqlHelper(config.mysql_host, config.mysql_username, bluedothe.mysql_password,
@@ -215,6 +218,57 @@ class TdxHelper:
             else:
                 df.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
 
+    # 读取板块信息，多个类型封装到一个df对象中返回
+    # 返回值：data_source, block_category, block_type, block_name, block_code, ts_code, create_time
+    def update_block_member(self):
+        ##指数板块 风格板块  概念板块  一般板块
+        #block_filename = ["block_zs.dat", "block_fg.dat", "block_gn.dat", "block.dat"]
+        block_filename = ["block_zs.dat", "block_fg.dat", "block_gn.dat"]  #block.dat中的数据都包含在其他版块里了，这个可以去掉
+        dfall = None
+        for block in block_filename:
+            df = self.api.to_df(self.api.get_and_parse_block_info(block))  # 板块文件名称
+            df['data_source'] = "tdx"
+            if block == "block.dat":
+                df['block_category'] = "tdx.yb"
+            else:
+                df['block_category'] = "tdx." + block[6:8]
+            df['block_type'] = df['block_type'].map(lambda x: str(x))
+            df['block_type'] = df['block_category'].str.cat(df['block_type'], sep = ".")  #, sep = "."
+            df['block_code'] = ""   #使用pd直接插入到数据库时，字段不能是None值
+            df['ts_code'] = df['code'].apply(lambda x: x + ".SH" if x[0:1] == "6" else x + ".SZ")
+            if (dfall is not None) and (not dfall.empty):
+                dfall = dfall.append(df, ignore_index=True)
+            else:
+                dfall = df
+        if (dfall is None) or (dfall.empty):return False
+
+        dfall.rename(columns={'blockname': 'block_name'}, inplace=True)
+        dfall['create_time'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        dfall = dfall[['data_source', 'block_category', 'block_type', 'block_name', 'block_code', 'ts_code', 'create_time']]  #列重排序
+
+        #分组统计
+        dfg = dfall.groupby(by=['data_source', 'block_category', 'block_type', 'block_name', 'block_code'],as_index=False).count()  # 分组求每组数量
+        dfg.rename(columns={'ts_code': 'stock_count'}, inplace=True)  #ts_code列数值为汇总值，需要重命名
+        dfg['create_time'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))  #create_time列数值为汇总值，需要重新赋值
+
+        dtypedict = {
+            'data_source': NVARCHAR(length=16), 'block_category': NVARCHAR(length=16), 'block_type': NVARCHAR(length=16),
+            'block_name': NVARCHAR(length=16), 'block_code': NVARCHAR(length=16), 'ts_code': NVARCHAR(length=16),'stock_count': Integer, 'create_time': DateTime
+        }
+        self.mysql.exec(mysql_script.delete_table_common.format("block_member where data_source = 'tdx'"))  # 删除表中记录
+        #该函数调用前，需要先将block_member表中的tdx相关的数据删掉
+        pd.io.sql.to_sql(dfall, 'block_member', con=self.engine, if_exists='append', index=False, index_label="data_source, block_category, block_type, block_name, block_code, ts_code",
+                         dtype=dtypedict, chunksize=10000)  # chunksize参数针对大批量插入，pandas会自动将数据拆分成chunksize大小的数据块进行批量插入;
+
+        self.mysql.exec(mysql_script.delete_table_common.format("block_basic where data_source = 'tdx'"))  # 删除表中记录
+        pd.io.sql.to_sql(dfg, 'block_basic', con=self.engine, if_exists='append', index=False, index_label="data_source, block_category, block_type, block_name, block_code",
+                         dtype=dtypedict, chunksize=10000)
+
+        #filename = config.tdx_csv_block + "group_block" + ".csv"
+        #dfg.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
+        return True
+
+    #获取一段时间的1分钟数据，因为每次调用接口只能返回3天的分钟数据（240*3)，需要分多次调用
     #返回值：0没有提取到数据；1提取到数据
     def get_minute1_data(self, category, market, code, start_date, end_date):
         init_start_date = start_date.replace('-', '')
@@ -271,8 +325,8 @@ if __name__ == '__main__':
     #tdx.get_security_bars(7, 0, '000001',2*240, 1*240)
     #tdx.get_security_count()
     #tdx.get_minute1_data(7, 0, '000518','2020-04-21', '2020-04-25')
-    dfn = tdx.get_security_bars_minute1(7, 0, '000029',0 ,720)
-    print(dfn is not None)
-    print(not dfn.empty)
-    print(dfn)
+    #dfn = tdx.get_security_bars_minute1(7, 0, '000029',0 ,720)
+    #print(dfn is not None)
+    #print(not dfn.empty)
+    #print(tdx.update_block_member())
     tdx.close_connect()

@@ -44,13 +44,36 @@ class TdxDataCollect:
                     "dbname": config.mysql_dbname}
         # self.engine = create_engine('mysql+pymysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**db_paras))
         self.engine = create_engine(
-            f'mysql+pymysql://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
+            f'mysql+mysqlconnector://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
 
     def tdx_close_connect(self):
         self.tdxhelper.close_connect()
 
-    def get_block(self):
-        pass
+    #获取板块成分股数据，直接通过pd插入数据库，每次插入前要清掉tdx相关的数据
+    def update_block_member(self):
+        data_type = 'tdx_block_member'
+        today = datetime.datetime.now()
+        today_str = today.strftime('%Y-%m-%d')
+
+        last_data_end_date_record = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",data_type)
+        last_data_end_date = last_data_end_date_record[0][0]  # last_data_end_date是日期类型
+        if last_data_end_date == None:
+            last_data_end_date = datatime_util.str2date(today_str) - datetime.timedelta(days=1)
+
+        end_date = datetime.datetime.strptime(today_str, '%Y-%m-%d').date()  # end_date是日期类型
+        if last_data_end_date >= end_date:  # 日志记录的
+            print("今天的数据已经更新完成，不必重复执行!")
+            return
+
+        if self.tdxhelper.update_block_member():
+            now = time.strftime("%Y-%m-%d %H:%M:%S")  # now是字符串
+            today = time.strftime("%Y-%m-%d")
+            paras = {"data_type": data_type, "data_name": "tdx板块成分股", "data_source": "tdx", "collect_start_time": now,
+                     "data_end_date": today, "collect_end_time": now,  "collect_log": f"完成{data_type}的数据采集", "collect_status": "S"}
+            print(paras)
+            mysql_script.record_log(paras)
+        else:
+            print("=======没有要更新的板块成分股========")
 
     #增加分钟数据
     #第一个参数，如果没有数据库日志记录，也就是本函数第一次执行，需要制定默认开始时间；第二个参数指定一个时间，对这个时间之后更新的文件不处理
@@ -76,7 +99,7 @@ class TdxDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")      #now是字符串
         paras = {"data_type": data_type, "data_name": "tdx1分钟数据",
                  "data_source": "tdx", "collect_start_time": now, "collect_status": "R"}
-        log_id = mysql_script.record_log(paras)
+        log_id = mysql_script.record_log(paras, flag = 'before')
 
         market = {'SZ': 0, 'SH': 1}
         for stock in records:
@@ -104,12 +127,9 @@ class TdxDataCollect:
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now, "collect_log": f"完成{end_date}的数据采集", "collect_status": "S", "id": log_id}
-        mysql_script.record_log(paras, False)
+        mysql_script.record_log(paras, flag = 'after')
 
         print("--------追加tdx1分钟数据初始化完成------------")
-
-    def append_minite1_simple(self):
-        pass
 
     # 初始化分钟数据
     @printHelper.time_this_function
@@ -130,7 +150,7 @@ class TdxDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "tdx_minline1", "data_name": "tdx1分钟数据",
                  "data_source": "tdx_local", "collect_start_time": now, "collect_status": "R"}
-        log_id = mysql_script.record_log(paras)
+        log_id = mysql_script.record_log(paras, flag = 'before')
 
         file_util.traversal_dir(config.tdx_local_sh_minline1, self.tdx_local_helper.read_tdx_local_minline_all)
         file_util.traversal_dir(config.tdx_local_sz_minline1, self.tdx_local_helper.read_tdx_local_minline_all)
@@ -138,7 +158,7 @@ class TdxDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now,
                  "collect_log": f"一次性完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
-        mysql_script.record_log(paras, False)
+        mysql_script.record_log(paras, flag = 'after')
 
         print("--------tdx1分钟数据初始化完成------------")
 
@@ -161,7 +181,7 @@ class TdxDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "tdx_minline1_simple", "data_name": "tdx1分钟数据",
                  "data_source": "tdx_local", "collect_start_time": now, "collect_status": "R"}
-        log_id = mysql_script.record_log(paras)
+        log_id = mysql_script.record_log(paras, flag = 'before')
 
         file_util.traversal_dir(config.tdx_local_sh_minline1, self.tdx_local_helper.read_tdx_local_minline_simple)
         file_util.traversal_dir(config.tdx_local_sz_minline1, self.tdx_local_helper.read_tdx_local_minline_simple)
@@ -169,7 +189,7 @@ class TdxDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now,
                  "collect_log": f"一次性完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
-        mysql_script.record_log(paras, False)
+        mysql_script.record_log(paras, flag = 'after')
 
         print("--------tdx1分钟数据初始化完成------------")
 
@@ -200,10 +220,12 @@ class TdxDataCollect:
 
     #每天批量执行更新数据
     def batch_execute_everyday(self):
-        self.append_minite1_all(default_start_date = "20200112", file_modify_time_flag = "")
+        self.append_minite1_all(default_start_date = "2020-01-12", file_modify_time_flag = "")
+        self.update_block_member()   #更新板块成分股和板块基本信息两张表
 
 if __name__ == '__main__':
     dc = TdxDataCollect()
-    dc.batch_execute_everyday()
+    #dc.batch_execute_everyday()
     #dc.execute_insert_tdx_index()
+    dc.update_block_member()
     dc.tdx_close_connect()

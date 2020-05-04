@@ -13,6 +13,10 @@ import datetime
 import time
 from tool.printHelper import time_this_function
 from tool import file_util
+import sys
+sys.path.append('.')
+import ctypes
+
 
 def test1():
     str = "abvcelsdss"
@@ -126,6 +130,10 @@ def test9():
 def test10():
     print(6//3)
 
+def test11():
+    dll=ctypes.cdll.LoadLibrary("WindPy.dll")
+
+
 if __name__ == '__main__':
     #file_util.traversal_dir("D:/Temp/android/HelloWorld/res",test8)
-    test9()
+    test11()

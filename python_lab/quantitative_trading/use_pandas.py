@@ -13,6 +13,51 @@ import os
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
+"""
+if (dfn is not None) and (not dfn.empty):   #判断df是否为空
+
+###重命名
+df.rename(index=self.format_date, inplace=True)   #index重命名
+df.rename(columns={'blockname': 'block_name'}, inplace=True)  #列名重命名
+
+col_name = df.columns.tolist()  #获取列名list
+
+df.reindex(columns=col_name)  #重建index
+
+###改变列数据或新增列
+dfpro.insert(0,'code',code)  #插入一列到第一列前
+df['data_source'] = "tdx"   #改变列数据，列不存在则新增
+df['ts_code'] = df['code'].apply(lambda x: x + ".SH" if x[0:1] == "6" else ".SZ")   #改变列数据，列不存在则新增
+df['volume'] = df['volume'].apply(lambda x: int(x))  # 取整
+df['block_type'] = df['block_type'].map(lambda x: str(x))  #数字类型转字符类型
+df['block_type'] = df['block_category'].str.cat(df['block_type'], sep = ".")  #列拼接，可选参数sep指定分隔符
+df.loc[df['amount'] == 5.877471754111438e-39, 'amount'] = 0  # 列值根据条件筛选后修改为0
+df['new_date'] = (df.index)  #将index值赋给一列，列不存在则新建
+
+df.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1, inplace=True)   #删除列
+
+#合并两个df数据
+dfall = pd.merge(dfpro, df,how='left', left_on='trade_date',right_on='new_date',sort=False,copy=False)   #两个df关联横向合并
+df = dfn.append(df,ignore_index=True)  #两个df纵向合并，即追加数据
+
+###排序
+newdf = dfall.sort_values(by ='trade_date', axis=0, ascending=True)  #按一列给行排序，升序
+df = df[['code', 'ts_code', 'trade_date', 'trade_time', 'time_index', 'open', 'high', 'low', 'close', 'amount', 'volume']]  #所有列重排序，没有出现的列将删掉
+
+dfg = df.groupby(by = 'trade_date').mean()  #分组统计信息
+dfg = dfall.groupby(by=['data_source', 'block_category', 'block_type', 'block_name', 'block_code'],as_index=False).count()  # 分组求每组数量
+data_start_date = df.min()['trade_date']   #取一列的最小值
+data_end_date = df.max()['trade_date']  #取一列的最大值
+
+for trade_date in dfg['trade_date'].values:   #遍历列值
+
+###条件过滤数据
+df = df.where(df.notnull(), "")  #如果有字段存在none值，转为空字符串
+dfg = dfg[dfg.volume == 0]  #条件过滤，保留满足条件的数据
+df = df[(df['trade_date'] != trade_date)]  # #条件过滤，每个条件要用括号()括起来
+df = df[(df['trade_date'] >= str(init_start_date)) & (df['trade_date'] <= str(init_end_date))]  #过滤掉start_date, end_date之外的数据，每个条件要用括号()括起来
+"""
+
 def test1():
     animals = pd.DataFrame({'kind': ['cat', 'dog', 'cat', 'dog'],
                             'height': [9.1, 6.0, 9.5, 34.0],

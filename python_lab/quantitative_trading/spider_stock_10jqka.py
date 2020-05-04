@@ -32,25 +32,6 @@ class AnalysisIndustry:
         self.industry_codes = []   #行业代码数组
         self.industry_codes_dict = []   #行业代码名称字典
 
-    def get_indusrty_codes(self):
-        instury_index_url = 'http://q.10jqka.com.cn/thshy/'
-        instury_index_url = 'http://q.10jqka.com.cn/thshy/index/field/199112/order/desc/page/2/ajax/1/'
-
-        html = self.get_industry_list(instury_index_url)
-        bs = BeautifulSoup(html, "html.parser")
-        list = bs.find('tbody').find_all("a", target="_blank")  # 龙虎榜的stock
-        print(type(list))
-        print(len(list))
-        for line in list:
-            href = str((line.get('href')))
-            if (href.find('thshy') == -1) is False:
-                ret = href.split("/")[-2]
-                self.industry_codes.append(ret)
-                self.industry_codes_dict.append({"code":ret,"name":line.get_text()})
-        print(self.industry_codes)
-        print(len(self.industry_codes))
-        print(self.industry_codes_dict)
-
     # 获取动态cookies
     def get_cookie(self):
         options = webdriver.ChromeOptions()
@@ -79,11 +60,37 @@ class AnalysisIndustry:
             print('请求页面失败', url)
             return None
 
-    # 获取行业列表 名称title、代码code、链接url
+    # 获取行业列表的html数据 名称title、代码code、链接url
     def get_industry_list(self, url):
         html = self.get_page_detail(url)
+        bs = BeautifulSoup(html, "html.parser")
+        #print(bs.prettify())  # 缩进格式
+        return bs
+
+    #同花顺行业数据
+    def get_indusrty_codes(self):
+        instury_index_url = 'http://q.10jqka.com.cn/thshy/'
+        instury_index_url = 'http://q.10jqka.com.cn/thshy/index/field/199112/order/desc/page/3/ajax/1/'
+
+        bs = self.get_industry_list(instury_index_url)
+        list = bs.find('tbody').find_all("a", target="_blank")  # 龙虎榜的stock
+        print(list)
+        print(len(list))
+        for line in list:
+            href = str((line.get('href')))
+            if (href.find('thshy') == -1) is False:
+                ret = href.split("/")[-2]
+                self.industry_codes.append(ret)
+                self.industry_codes_dict.append({"code":ret,"name":line.get_text()})
+        print(self.industry_codes)
+        #print(len(self.industry_codes))
+        #print(self.industry_codes_dict)
+
+    def get_one_data(self, code_industry):
+        url = 'http://d.10jqka.com.cn/v4/line/bk_' + code_industry + '/01/last.js'
+        html = self.get_page_detail(url).decode('gbk')
         print(html)
-        return (html)
+        return html
 
     def get_all_data(self):
         with open(os.getcwd() + "/ths_file/" + 'all_industry_data.txt', 'w') as f:
@@ -92,16 +99,9 @@ class AnalysisIndustry:
                 f.write(str(data) + "\n")
                 time.sleep(1)
 
-    def get_one_data(self, code_industry):
-        url = 'http://d.10jqka.com.cn/v4/line/bk_' + code_industry + '/01/last.js'
-        html = self.get_page_detail(url).decode('gbk')
-        print(html)
-        return html
-
-
 if __name__ == '__main__':
     s = AnalysisIndustry()
-    s.get_indusrty_codes()
+    #s.get_indusrty_codes()
     #s.get_all_data()
-    #s.get_one_data("881101")  #881101种植业与林业
+    s.get_one_data("881101")  #881101种植业与林业
     #s.get_industry_list('http://d.10jqka.com.cn/v4/line/bk_' + '881101' + '/01/last.js')

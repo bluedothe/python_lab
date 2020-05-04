@@ -44,7 +44,7 @@ class TushareDataCollect:
                     "dbname": config.mysql_dbname}
         # self.engine = create_engine('mysql+pymysql://{user}:{passwd}@{host}/{dbname}?charset=utf8'.format(**db_paras))
         self.engine = create_engine(
-            f'mysql+pymysql://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
+            f'mysql+mysqlconnector://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
 
     #通过tusharepro接口获取股票基本信息，使用pandas的to_sql入库，如果表存在则删除重建
     def get_stock_basic_pandas(self):
@@ -57,7 +57,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "stock_basic", "data_name": "股票基本信息",
                  "data_source": "tusharepro", "collect_start_time": now, "collect_status": "R"}
-        log_id = mysql_script.record_log(paras)
+        log_id = mysql_script.record_log(paras, flag = 'before')
 
         self.mysql.exec(mysql_script.truncate_table_common.format("stock_basic"))
         self.tshelper.stock_basic_mysql_one("L")
@@ -70,7 +70,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now,
                  "collect_log": f"完成股票基础数据更新", "collect_status": "S", "id": log_id}
-        mysql_script.record_log(paras, False)
+        mysql_script.record_log(paras, flag = 'after')
 
         print("--------tusharepro股票基本信息更新完成------------")
 
@@ -88,7 +88,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "tushare_history_all", "data_name": "tushare交易数据，两个接口合并",
                  "data_source": "tusharepro+tushare", "collect_start_time": now, "collect_status": "R"}
-        log_id = mysql_script.record_log(paras)
+        log_id = mysql_script.record_log(paras, flag = 'before')
 
         sql = "select ts_code from stock_basic"
         stock_basic_df = pd.read_sql(sql, self.engine, index_col=None, coerce_float=True, params=None, parse_dates=None, columns=None,chunksize=None)
@@ -103,7 +103,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now,
                  "collect_log": f"完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
-        mysql_script.record_log(paras, False)
+        mysql_script.record_log(paras, flag = 'after')
 
     #采集交易数据，tusharepro
     # 只在第一次采集的时候执行，以后执行追加方法
@@ -114,7 +114,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "tushare_history_pro", "data_name": "tusharepro交易数据",
                  "data_source": "tusharepro", "collect_start_time": now, "collect_status": "R"}
-        log_id = mysql_script.record_log(paras)
+        log_id = mysql_script.record_log(paras, flag = 'before')
 
         for ts_code in stock_basic_df['ts_code']:
             time.sleep(1)
@@ -124,7 +124,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": "2020-04-12", "collect_end_time": now,
                  "collect_log": "一次完成到2020-04-12的所有交易数据", "collect_status": "S", "id": log_id}
-        mysql_script.record_log(paras, False)
+        mysql_script.record_log(paras, flag = 'after')
 
     #获取大盘指数
     @printHelper.time_this_function
@@ -145,14 +145,14 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "tushare_index", "data_name": "tushare大盘指数",
                  "data_source": "tushare", "collect_start_time": now, "collect_status": "R"}
-        log_id = mysql_script.record_log(paras)
+        log_id = mysql_script.record_log(paras, flag = 'before')
 
         self.tshelper.get_day_index_all(start_date, end_date)
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now,
                  "collect_log": f"完成从{start_date}到{end_date}的数据采集", "collect_status": "S", "id": log_id}
-        mysql_script.record_log(paras, False)
+        mysql_script.record_log(paras, flag = 'after')
 
         print("--------tushare_index大盘指数追加完成------------")
 
@@ -175,7 +175,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "tushare_history_all", "data_name": "tushare交易数据，两个接口合并",
                  "data_source": "tusharepro+tushare", "collect_start_time": now, "collect_status": "R"}
-        log_id = mysql_script.record_log(paras)
+        log_id = mysql_script.record_log(paras, flag = 'before')
         while start_date <= end_date:
             start_date_pro = start_date.strftime('%Y%m%d')
             #print(start_date_pro)
@@ -184,7 +184,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now,
                  "collect_log": f"完成从{start_date_bak}到{end_date}的数据追加", "collect_status": "S", "id": log_id}
-        mysql_script.record_log(paras, False)
+        mysql_script.record_log(paras, flag = 'after')
 
         print("--------tusharepro+tushare日数据追加完成------------")
 
@@ -208,7 +208,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_type": "tushare_history_pro", "data_name": "tusharepro交易数据",
                  "data_source": "tusharepro", "collect_start_time": now, "collect_status": "R"}
-        log_id = mysql_script.record_log(paras)
+        log_id = mysql_script.record_log(paras, flag = 'before')
 
         while start_date <= end_date:
             start_date_pro = start_date.strftime('%Y%m%d')
@@ -218,7 +218,7 @@ class TushareDataCollect:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         paras = {"data_end_date": str(end_date), "collect_end_time": now,
                  "collect_log": f"完成从{start_date_bak}到{end_date}的数据追加", "collect_status": "S", "id": log_id}
-        mysql_script.record_log(paras, False)
+        mysql_script.record_log(paras, flag = 'after')
 
         print("--------tusharepro日数据追加完成-----------------")
 
