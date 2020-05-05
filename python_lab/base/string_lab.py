@@ -80,5 +80,13 @@ def str_join():
 def path_join():
     print(os.path.join('/hello/','good/date','datbody','bac'))
 
+#字符串分割
+def str_split():
+    str = 'http://q.10jqka.com.cn/zjhhy/detail/code/I/'
+    strs = str.split('/')
+    print(strs)
+    print(str.split('/')[-2])  #取字母I
+    print("1/12".split('/')[-1])
+
 if __name__ == '__main__':
-    str_join()
+    str_split()

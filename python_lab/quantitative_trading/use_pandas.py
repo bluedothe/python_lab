@@ -13,50 +13,129 @@ import os
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
-"""
-if (dfn is not None) and (not dfn.empty):   #判断df是否为空
+def create_null_df():
+    df = pd.DataFrame(columns=["block_type","block_name","member_count"])
+    print(df)
 
-###重命名
-df.rename(index=self.format_date, inplace=True)   #index重命名
-df.rename(columns={'blockname': 'block_name'}, inplace=True)  #列名重命名
+#创建dataframe对象，第一种： 用Python中的字典生成,必须放到数组里
+def create_df1():
+    data_dict1 = {"block_type":"tdx.gn","block_name":"稀土","member_count":35}
+    data = [data_dict1]
+    df = pd.DataFrame(data)
+    print(df)
 
-col_name = df.columns.tolist()  #获取列名list
+    data_dict1 = {"block_type": "tdx.gn", "block_name": "稀土", "member_count": 35}
+    data_dict2 = {"block_type": "tdx.gn", "block_name": "特高压", "member_count": 20}
+    data = [data_dict1, data_dict2]
+    df = pd.DataFrame(data)
+    print(df)
 
-df.reindex(columns=col_name)  #重建index
+    data_dict1 = {"block_type": "tdx.gn", "block_name": ["稀土", "特高压"]}
+    df = pd.DataFrame(data_dict1)
+    print(df)
 
-###改变列数据或新增列
-dfpro.insert(0,'code',code)  #插入一列到第一列前
-df['data_source'] = "tdx"   #改变列数据，列不存在则新增
-df['ts_code'] = df['code'].apply(lambda x: x + ".SH" if x[0:1] == "6" else ".SZ")   #改变列数据，列不存在则新增
-df['volume'] = df['volume'].apply(lambda x: int(x))  # 取整
-df['block_type'] = df['block_type'].map(lambda x: str(x))  #数字类型转字符类型
-df['block_type'] = df['block_category'].str.cat(df['block_type'], sep = ".")  #列拼接，可选参数sep指定分隔符
-df.loc[df['amount'] == 5.877471754111438e-39, 'amount'] = 0  # 列值根据条件筛选后修改为0
-df['new_date'] = (df.index)  #将index值赋给一列，列不存在则新建
+    data_dict1 = {"block_type": "tdx.gn", "block_name": ["稀土", "特高压"], "member_count":[35,20]}
+    df = pd.DataFrame(data_dict1)
+    print(df)
 
-df.drop(['year', 'month', 'day', 'hour', 'minute', 'datetime'], axis=1, inplace=True)   #删除列
+    data = {'A': 1.,
+            'B': pd.Timestamp('20130102'),
+            'C': pd.Series(1, index=list(range(4)), dtype='float32'),
+            'D': np.array([3] * 4, dtype='int32'),
+            'E': pd.Categorical(["test", "train", "test", "train"]),
+            'F': 'foo'}
+    df = pd.DataFrame(data)
+    print(df)
 
-#合并两个df数据
-dfall = pd.merge(dfpro, df,how='left', left_on='trade_date',right_on='new_date',sort=False,copy=False)   #两个df关联横向合并
-df = dfn.append(df,ignore_index=True)  #两个df纵向合并，即追加数据
+    data = {
+        "a": [1, 2, 3],
+        "b": [4, 5, 6],
+        "c": [7, 8, 9]
+    }
+    df = pd.DataFrame(data, index = ["a","b","c"])
+    print(df)
 
-###排序
-newdf = dfall.sort_values(by ='trade_date', axis=0, ascending=True)  #按一列给行排序，升序
-df = df[['code', 'ts_code', 'trade_date', 'trade_time', 'time_index', 'open', 'high', 'low', 'close', 'amount', 'volume']]  #所有列重排序，没有出现的列将删掉
+    data = {
+        "one": np.random.rand(3),
+        "two": np.random.rand(3)  # 这里尝试“two”：np.random.rand（4）会报错，
+    }
+    df = pd.DataFrame(data)
+    print(df)
 
-dfg = df.groupby(by = 'trade_date').mean()  #分组统计信息
-dfg = dfall.groupby(by=['data_source', 'block_category', 'block_type', 'block_name', 'block_code'],as_index=False).count()  # 分组求每组数量
-data_start_date = df.min()['trade_date']   #取一列的最小值
-data_end_date = df.max()['trade_date']  #取一列的最大值
+    data = {
+        "Jack": {"math": 90, "english": 89, "art": 78},
+        "Marry": {"math": 82, "english": 95, "art": 96},
+        "Tom": {"math": 85, "english": 94}
+    }
+    df = pd.DataFrame(data)
+    df = pd.DataFrame(data, columns=["Jack", "Tom", "Bob"])
+    df = pd.DataFrame(data, index=["a", "b", "c"], columns=["Jack", "Tom", "Bob"])
+    df = pd.DataFrame(data, index=["art", "math", "english"], columns=["Jack", "Tom", "Bob"])
+    print(df)
 
-for trade_date in dfg['trade_date'].values:   #遍历列值
 
-###条件过滤数据
-df = df.where(df.notnull(), "")  #如果有字段存在none值，转为空字符串
-dfg = dfg[dfg.volume == 0]  #条件过滤，保留满足条件的数据
-df = df[(df['trade_date'] != trade_date)]  # #条件过滤，每个条件要用括号()括起来
-df = df[(df['trade_date'] >= str(init_start_date)) & (df['trade_date'] <= str(init_end_date))]  #过滤掉start_date, end_date之外的数据，每个条件要用括号()括起来
-"""
+#创建dataframe对象，第二种： 利用指定的列内容、索引以及数据
+def create_df2():
+    columns = ["block_type", "block_name", "member_count"]
+    data = [['tdx.gn','abc',4],['tdx.gn','xyz',5]]
+    dates = pd.date_range('2020-05-01',periods=2)
+    df = pd.DataFrame(data=data,columns=columns,index=dates)
+    print(df)
+
+#创建dataframe对象，通过读取文件，可以是json,csv,excel等等，如果用excel请先安装xlrd这个包。
+def create_df3():
+    df = pd.read_excel("")
+    df = pd.read_csv("")
+    df = pd.read_json("")
+    df = pd.read_html("")
+    df = pd.read_sql("")
+
+#创建dataframe对象，第四种：用numpy中的array生成
+def create_df4():
+    data = np.arange(15).reshape(3,5)  #生成0-14共15个数，分成3行5列的二维数组
+    df = pd.DataFrame(data)
+    print(df)
+
+    df = pd.DataFrame(np.random.randn(6, 4), columns=list('ABCD'))   #6行4列的随机数，列名分别为ABCD
+    print(df)
+
+    index = pd.date_range('1/1/2000', periods=8)
+    df = pd.DataFrame(np.random.randn(8, 3), index=index, columns=['A', 'B', 'C'])
+    print(df)
+
+#创建dataframe对象，第五种： 用numpy中的array，但是行和列名都是从numpy数据中来的
+def create_df5():
+    pass
+
+#创建dataframe对象，第六种： 利用tuple合并数据
+def create_df6():
+    block_type = ['tdx.gn','tdx.gn','tdx.gn']
+    block_name = ['稀土', '特高压', '5G']
+    member_count = [35,20,44]
+    list_tuples = list(zip(block_type,block_name,member_count))
+    df = pd.DataFrame(list_tuples,columns=['block_type','block_name','member_count'])  #,columns=[]
+    print(df)
+
+#创建dataframe对象，第七种： 利用pandas的series
+def create_df7():
+    dates = pd.date_range('2020-05-01', periods=3)
+    df = pd.DataFrame.from_dict({"block_type":pd.Series(['tdx.gn','tdx.gn','tdx.gn'],index=dates),
+                                 "block_name": pd.Series(['稀土', '特高压', '5G'],index=dates),
+                                 "member_count": pd.Series([35, 20, 44],index=dates)
+                                 })
+    print(df)
+
+    df = pd.DataFrame({
+        'one': pd.Series(np.random.randn(3), index=['a', 'b', 'c']),
+        'two': pd.Series(np.random.randn(4), index=['a', 'b', 'c', 'd']),
+        'three': pd.Series(np.random.randn(3), index=['b', 'c', 'd'])})
+    print(df)
+
+    data = {'水果': pd.Series(['苹果', '梨', '草莓']),
+            '数量': pd.Series([3, 2, 5]),
+            '价格': pd.Series([10, 9, 8])}
+    df = pd.DataFrame(data)
+    print(df)
 
 def test1():
     animals = pd.DataFrame({'kind': ['cat', 'dog', 'cat', 'dog'],
@@ -95,11 +174,6 @@ def test2():
     print(df2.T)   #转置数据
     print(df.describe())    #查看数据的统计摘要
 
-def test3():
-    index = pd.date_range('1/1/2000', periods=8)
-    df = pd.DataFrame(np.random.randn(8, 3), index=index,columns=['A', 'B', 'C'])
-    print(df)
-
 def test4():
     s = pd.Series(np.random.randn(5), index=['a', 'b', 'c', 'd', 'e'])
     print(s)
@@ -111,15 +185,8 @@ def test5():
     print(long_series.head())  # 默认头5条
     print(long_series.tail(3))
 
-def test6():
-    df = pd.DataFrame({
-        'one': pd.Series(np.random.randn(3), index=['a', 'b', 'c']),
-        'two': pd.Series(np.random.randn(4), index=['a', 'b', 'c', 'd']),
-        'three': pd.Series(np.random.randn(3), index=['b', 'c', 'd'])})
-    print(df)
-
 def test7():
-    df = pd.DataFrame(np.random.randn(6,4),columns=list('ABCD'))
+    df = pd.DataFrame(np.random.randn(6,4),columns=list('ABCD'))  #6行4列的随机数，列名分别为ABCD
     filename = "D:/Temp/" + 'my_csv.csv'
     print(df)
     if os.path.isfile(filename):
@@ -132,9 +199,4 @@ def test7():
         df2.to_csv(filename, mode='w', header=True, sep=',')
 
 if __name__ == '__main__':
-    #test1()
-    #test2()
-    #test3()
-    #test4()
-    #test6()
-    test7()
+    create_df4()
