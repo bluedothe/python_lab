@@ -87,6 +87,7 @@ def str_split():
     print(strs)
     print(str.split('/')[-2])  #取字母I
     print("1/12".split('/')[-1])
+    print("abcdt"[2])
 
 if __name__ == '__main__':
     str_split()

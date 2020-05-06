@@ -10,6 +10,7 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
+import os
 from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -18,6 +19,12 @@ import re
 from lxml import etree
 import pandas as pd
 import html5lib
+import time
+
+from stock_data import mysql_script
+from db.mysqlHelper import mysqlHelper
+from stock_data import bluedothe
+from stock_data import config
 
 class ThsHelper:
     def __init__(self):
@@ -329,9 +336,11 @@ class ThsHelper:
         print(thshy_codes_href)
         print(len(thshy_codes_href))
 
-    # 获取个股每日换手率、流通股、流通市值、市盈率
-    def stock_day_info2(self):
+    #获取每只股票的附加数据并写入csv
+    # 获取个股每日涨跌幅、涨跌、换手率、量比、振幅、流通股、流通市值、市盈率
+    def get_day_attach(self, trade_date = ""):
         url = "http://q.10jqka.com.cn/index/index/board/all/field/zdf/order/desc/page/{}/ajax/1/"
+        if len(trade_date) == 0: trade_date = time.strftime("%Y%m%d")  #如果没指定交易日期则用当天日期
 
         html = self.get_page_bs(url.format(1))
         if html is None: return 0
@@ -348,15 +357,31 @@ class ThsHelper:
                 break
             table = bs.table
             df = pd.read_html(table.prettify(), attrs={"class":"m-table m-pager-table"}, converters={1:lambda x: str(x) + ".SH" if str(x)[0:1] == '6' else str(x) + ".SZ"})[0]  #converters将股票代码转换为ts_code
-            df.drop(df.columns[[0, 3, 4, 5, 6, 8, 9, 10, 14]], axis=1, inplace=True)  #删除不需要的列
-            df.columns = ['ts_code', 'name', 'turnover_rate', 'circulate_num', 'circulate_amount', 'per']   #重命名列名:代码,名称,换手(%),流通股,流通市值,市盈率
+            df.drop(df.columns[[0, 3, 6, 10, 14]], axis=1, inplace=True)  #删除不需要的列
+            df.columns = ['ts_code', 'name', 'pct_chg', 'price_change', 'turnover_rate', 'qrr', 'amplitude', 'circulate_num', 'circulate_amount', 'per']   #重命名列名:代码,名称,换手(%),流通股,流通市值,市盈率
             if page_no == 1:
                 dfall = df
             else:
                 dfall = dfall.append(df, ignore_index=True)  # 两个df纵向合并，即追加数据
             page_no = page_no + 1
+
+        dfall.insert(0,'code', dfall['ts_code'].apply(lambda x: str(x)[0:6]))
+        dfall.insert(2, 'trade_date', trade_date)
         print(dfall)
         print(len(dfall))
+
+        for i in range(len(dfall)):
+            df = dfall.iloc[i:i+1]   #取dataframe对象必须用iloc[i:i+1]写法
+            print(type(df))
+            ts_code = dfall.iloc[i]['ts_code']  #iloc[i]取出的是一行的元组对象
+
+            filename = config.ths_csv_day_attach + ts_code + ".csv"
+            if os.path.isfile(filename):
+                df.to_csv(filename, index=False, mode='a', header=False, sep=',', encoding="utf_8_sig")
+                print("更新一分钟all股票数据：", filename)
+            else:
+                df.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
+                print("新增加的一分钟all股票数据：", filename)
 
 if __name__ == '__main__':
     ths = ThsHelper()

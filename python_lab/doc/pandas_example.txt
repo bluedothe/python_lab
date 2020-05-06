@@ -54,9 +54,15 @@ for x in insertRow2_index:
     insertRow2.append(df4.loc[x].values)
 insertRow22 = pd.DataFrame(insertRow2)
 
-#将一个df所有行分成两部分
+#将一个df所有行分成两部分,注意如果指指定一个值，取出的不是dataframe对象，而是一个值的元组对象
 above = df3.loc[:2]
 below = df3.loc[3:]
+
+##dataframe对象行遍历、列遍历
+iterrows(): 按行遍历，将DataFrame的每一行迭代为(index, Series)对，可以通过row[name]对元素进行访问。
+itertuples(): 按行遍历，将DataFrame的每一行迭代为元祖，可以通过row[name]对元素进行访问，比iterrows()效率高。
+iteritems():按列遍历，将DataFrame的每一列迭代为(列名, Series)对，可以通过row[index]对元素进行访问。
+
 
 #合并两个df数据
 dfall = pd.merge(dfpro, df,how='left', left_on='trade_date',right_on='new_date',sort=False,copy=False)   #两个df关联横向合并
