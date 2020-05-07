@@ -23,7 +23,7 @@ from tool import printHelper
 from tool import file_util
 from tool import datatime_util
 
-class TdxDataCollect:
+class ThsDataCollect:
     def __init__(self):
         #pandas数据显示设置
         pd.set_option('display.max_columns', None)  # 显示所有列
@@ -65,15 +65,15 @@ class TdxDataCollect:
                  "data_source": "ths", "collect_start_time": now, "collect_status": "R"}
         log_id = mysql_script.record_log(paras, flag='before')
 
-        self.thsHelper.get_day_attach(trade_date)
+        result = self.thsHelper.get_day_attach(trade_date)
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        paras = {"data_end_date": str(end_date), "collect_end_time": now, "collect_log": f"完成{end_date}的数据采集",
+        paras = {"data_end_date": str(end_date), "collect_end_time": now, "collect_log": f"完成{end_date}的数据采集,更新股票{result}条",
                  "collect_status": "S", "id": log_id}
         mysql_script.record_log(paras, flag='after')
 
         print("--------更新每日股票附加数据完成------------")
 
 if __name__ == '__main__':
-    ths = TdxDataCollect()
+    ths = ThsDataCollect()
     ths.update_day_attach()

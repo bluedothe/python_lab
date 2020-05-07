@@ -37,5 +37,14 @@ def delete_file(fileName):
         except:
             pass
 
+#将pandas的df对象保存为csv文件，如果文件不存在则新建，如果存在则追加
+def df2csv_append(df, filename):
+    if os.path.isfile(filename):
+        df.to_csv(filename, index=False, mode='a', header=False, sep=',', encoding="utf_8_sig")
+        print("更新一分钟all股票数据：", filename)
+    else:
+        df.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
+        print("新增加的一分钟all股票数据：", filename)
+
 if __name__ == '__main__':
     print(os.path.isfile('E:/doc/design/dbmodel/yy'))
