@@ -171,9 +171,9 @@ class ThsHelper:
             url = "http://q.10jqka.com.cn/gn/detail/field/264648/order/desc/page/{}/ajax/1/code/{}"     #概念
 
         html = self.get_page_bs(url.format(1, block_code))
-        if html is None: return 0
+        if html is None: return []
         page_no_span = html.find("span", class_="page_info")
-        if page_no_span is None:return 0
+        if page_no_span is None:return []
         page_sum = int((page_no_span.string).split('/')[-1])
 
         page_no = 1
@@ -242,11 +242,11 @@ class ThsHelper:
         url = "http://q.10jqka.com.cn/gn/index/field/addtime/order/desc/page/{}/ajax/1/"
 
         html = self.get_page_bs(url.format(1))
-        if html is None: return 0
+        if html is None: return None
         page_no_span = html.find("span", class_="page_info")
-        if page_no_span is None: return 0
+        if page_no_span is None: return None
         page_sum = int((page_no_span.string).split('/')[-1])
-
+        print('page_sum:', page_sum)
         page_no = 1
         while True:
             if page_no > page_sum: break
@@ -258,12 +258,13 @@ class ThsHelper:
             if len(list) == 0:
                 print("list==0, page_no: ", page_no)
                 break
-            print('page_no',page_no)
+            print('page_no:',page_no)
             for line in list:
                 #获取tr数据
                 tr = line.parent.parent
-                i = 1
+                i = 0
                 for child in tr.find_all('td'):
+                    i = i + 1
                     if i == 4: continue
                     if i == 1: gn_date = child.string
                     if i == 2:
@@ -271,22 +272,20 @@ class ThsHelper:
                         href = child.find("a").get('href')
                         block_code = href.split("/")[-2]
                     if i == 3: gn_event = child.string
-                    if i == 5: member_count = child.string; print(member_count)
-                    i = i + 1
+                    if i == 5: member_count = child.string
                 block_info.append({"data_source":self.data_source, "block_category":block_category, "block_type":"", "block_name":block_name,
-                                   "block_code":block_code, "member_count":"", "gn_date":gn_date, "gn_event":gn_event, "href":href})
+                                   "block_code":block_code, "member_count":member_count, "gn_date":gn_date, "gn_event":gn_event, "href":href})
                 ts_codes = self.get_block_member(block_category,block_code)
-                block_member.append({"data_source":self.data_source, "block_category":block_category, "block_type":"", "block_name":block_name,
-                                   "block_code":block_code, "ts_code":ts_codes})
+                for ts_code in ts_codes:
+                    block_member.append({"data_source":self.data_source, "block_category":block_category, "block_type":"", "block_name":block_name,
+                                   "block_code":block_code, "ts_code":ts_code})
             #---
             page_no = page_no + 1
+
         block_info_df = pd.DataFrame(block_info)
         block_member_df = pd.DataFrame(block_member)
-        print(block_info_df)
-        print(block_member_df)
-        print("--------block_info_df---------",len(block_info_df))
-        print("-------block_member_df----------",len(block_member_df))
-
+        mysql_script.df2db_update(data_source=self.data_source, block_basic_df=block_info, block_member_df=block_member)
+        return (len(block_info_df), len(block_member_df))
 
     # 概念成分股数据
     def get_block_member_gn(self):

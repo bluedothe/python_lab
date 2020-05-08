@@ -43,6 +43,7 @@ class ThsDataCollect:
         self.engine = create_engine(
             f'mysql+mysqlconnector://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
 
+    #追加日线附加数据
     def update_day_attach(self, trade_date = ""):
         data_type = 'ths_day_attach'
         today = datetime.datetime.now()
@@ -73,6 +74,39 @@ class ThsDataCollect:
         mysql_script.record_log(paras, flag='after')
 
         print("--------更新每日股票附加数据完成------------")
+
+    def update_block_gn(self):
+        data_type = 'ths_block_member'
+        today = datetime.datetime.now()
+        today_str = today.strftime('%Y-%m-%d')
+
+        last_data_end_date_record = self.mysql.select("select max(data_end_date) from collect_log where data_type = %s",
+                                                      data_type)
+        last_data_end_date = last_data_end_date_record[0][0]  # last_data_end_date是日期类型
+        if last_data_end_date == None:
+            last_data_end_date = datatime_util.str2date(today_str) - datetime.timedelta(days=1)
+
+        end_date = datetime.datetime.strptime(today_str, '%Y-%m-%d').date()  # end_date是日期类型
+        if last_data_end_date >= end_date:  # 日志记录的
+            print("今天的数据已经更新完成，不必重复执行!")
+            return
+        result = self.thsHelper.get_block_gn()
+
+        #block_count = re
+        if result is not None :
+            now = time.strftime("%Y-%m-%d %H:%M:%S")  # now是字符串
+            today = time.strftime("%Y-%m-%d")
+            paras = {"data_type": data_type, "data_name": "ths板块成分股", "data_source": "ths", "collect_start_time": now,
+                     "data_end_date": today, "collect_end_time": now,
+                     "collect_log": f"完成{data_type}的数据采集,更新板块信息{result[0]}条，更新板块成分数据{result[1]}条",
+                     "collect_status": "S"}
+            print(paras)
+            mysql_script.record_log(paras)
+        else:
+            print("=======没有要更新的板块成分股========")
+
+    def batch_execute_everyday(self):
+        self.update_day_attach()
 
 if __name__ == '__main__':
     ths = ThsDataCollect()

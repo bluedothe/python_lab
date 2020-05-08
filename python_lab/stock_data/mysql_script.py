@@ -9,11 +9,16 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
+import pandas as pd
 from db.mysqlHelper import mysqlHelper
 from stock_data import bluedothe
 from stock_data import config
+from sqlalchemy import create_engine
+from sqlalchemy.types import NVARCHAR, Float, Integer, DateTime, BigInteger
 
 mysql = mysqlHelper(config.mysql_host, config.mysql_username, bluedothe.mysql_password, config.mysql_dbname)
+# pandas的mysql对象
+engine = create_engine(f'mysql+pymysql://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
 
 """
 CREATE DATABASE mydb default character set utf8mb4 collate utf8mb4_general_ci;
@@ -123,16 +128,18 @@ create table block_member
 
 create_block_basic = """
 /*==============================================================*/
-/* Table: block_basic                                           */
+/* Table: block_basic                                            */
 /*==============================================================*/
 create table block_basic
 (
    data_source          varchar(16) not null comment '板块分类来源',
    block_category       varchar(16) not null comment '板块种类',
    block_type           varchar(16) not null comment '板块分类',
-   block_name           varchar(16) not null comment '板块名称',
+   block_name           varchar(64) not null comment '板块名称',
    block_code           varchar(16) not null comment '板块代码',
-   stock_count          int comment '成分股数量',
+   member_count         int comment '成分股数量',
+   gn_date              date comment '概念提出时间',
+   gn_event             varchar(256) comment '概念事件驱动',
    create_time          datetime,
    primary key (data_source, block_category, block_type, block_name, block_code)
 );
@@ -151,10 +158,28 @@ def record_log(paras, flag = 'all'):
         id = mysql.insert_one(insert_collect_log.format(**paras))
         return id
 
+#更新block_basic和block_member两张表的数据
+def df2db_update(data_source, block_basic_df, block_member_df):
+    dtypedict = {
+        'data_source': NVARCHAR(length=16), 'block_category': NVARCHAR(length=16), 'block_type': NVARCHAR(length=16),
+        'block_name': NVARCHAR(length=16), 'block_code': NVARCHAR(length=16), 'ts_code': NVARCHAR(length=16),
+        'member_count': Integer, 'create_time': DateTime
+    }
+    mysql.exec(delete_table_common.format(f"block_member where data_source = '{data_source}'"))  # 删除表中记录
+    # 该函数调用前，需要先将block_member表中的tdx相关的数据删掉
+    pd.io.sql.to_sql(block_member_df, 'block_member', con=engine, if_exists='append', index=False,
+                     index_label="data_source, block_category, block_type, block_name, block_code, ts_code",
+                     dtype=dtypedict, chunksize=10000)  # chunksize参数针对大批量插入，pandas会自动将数据拆分成chunksize大小的数据块进行批量插入;
+
+    mysql.exec(delete_table_common.format(f"block_basic where data_source = '{data_source}'"))  # 删除表中记录
+    pd.io.sql.to_sql(block_basic_df, 'block_basic', con=engine, if_exists='append', index=False,
+                     index_label="data_source, block_category, block_type, block_name, block_code",
+                     dtype=dtypedict, chunksize=10000)
+
 if __name__ == '__main__':
     #mysql.exec(drop_stock_basic) #删除表
-    #mysql.exec(create_block_basic) #建表
+    mysql.exec(create_block_basic) #建表
     #mysql.exec(insert_exam[0:-1])
     #mysql.exec(drop_table_common.format('collect_log'))  #删除表
-    mysql.exec(delete_table_common.format("block_member where data_source = 'tdx'"))  #删除表中记录
+    #mysql.exec(delete_table_common.format("block_member where data_source = 'tdx'"))  #删除表中记录
     pass

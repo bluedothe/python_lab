@@ -31,6 +31,7 @@ class TdxHelper:
     ip_list = [{'ip': '119.147.212.81', 'port': 7709},{'ip': '60.12.136.250', 'port': 7709}]
 
     def __init__(self):
+        #连接tdx接口
         self.api = TdxHq_API()
         if not self.api.connect('60.12.136.250', 7709):
             print("服务器连接失败！")
@@ -46,6 +47,7 @@ class TdxHelper:
         # pandas的mysql对象
         self.engine = create_engine(f'mysql+pymysql://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
 
+    #断开tdx接口连接
     def close_connect(self):
         self.api.disconnect()
 
@@ -224,14 +226,15 @@ class TdxHelper:
         ##指数板块 风格板块  概念板块  一般板块
         #block_filename = ["block_zs.dat", "block_fg.dat", "block_gn.dat", "block.dat"]
         block_filename = ["block_zs.dat", "block_fg.dat", "block_gn.dat"]  #block.dat中的数据都包含在其他版块里了，这个可以去掉
+        data_source = "tdx"
         dfall = None
         for block in block_filename:
             df = self.api.to_df(self.api.get_and_parse_block_info(block))  # 板块文件名称
-            df['data_source'] = "tdx"
+            df['data_source'] = data_source
             if block == "block.dat":
-                df['block_category'] = "tdx.yb"
+                df['block_category'] = data_source + ".yb"
             else:
-                df['block_category'] = "tdx." + block[6:8]
+                df['block_category'] = data_source + "." + block[6:8]
             df['block_type'] = df['block_type'].map(lambda x: str(x))
             df['block_type'] = df['block_category'].str.cat(df['block_type'], sep = ".")  #, sep = "."
             df['block_code'] = ""   #使用pd直接插入到数据库时，字段不能是None值
@@ -240,7 +243,7 @@ class TdxHelper:
                 dfall = dfall.append(df, ignore_index=True)
             else:
                 dfall = df
-        if (dfall is None) or (dfall.empty):return False
+        if (dfall is None) or (dfall.empty):return None
 
         dfall.rename(columns={'blockname': 'block_name'}, inplace=True)
         dfall['create_time'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
@@ -248,25 +251,11 @@ class TdxHelper:
 
         #分组统计
         dfg = dfall.groupby(by=['data_source', 'block_category', 'block_type', 'block_name', 'block_code'],as_index=False).count()  # 分组求每组数量
-        dfg.rename(columns={'ts_code': 'stock_count'}, inplace=True)  #ts_code列数值为汇总值，需要重命名
+        dfg.rename(columns={'ts_code': 'member_count'}, inplace=True)  #ts_code列数值为汇总值，需要重命名
         dfg['create_time'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))  #create_time列数值为汇总值，需要重新赋值
 
-        dtypedict = {
-            'data_source': NVARCHAR(length=16), 'block_category': NVARCHAR(length=16), 'block_type': NVARCHAR(length=16),
-            'block_name': NVARCHAR(length=16), 'block_code': NVARCHAR(length=16), 'ts_code': NVARCHAR(length=16),'stock_count': Integer, 'create_time': DateTime
-        }
-        self.mysql.exec(mysql_script.delete_table_common.format("block_member where data_source = 'tdx'"))  # 删除表中记录
-        #该函数调用前，需要先将block_member表中的tdx相关的数据删掉
-        pd.io.sql.to_sql(dfall, 'block_member', con=self.engine, if_exists='append', index=False, index_label="data_source, block_category, block_type, block_name, block_code, ts_code",
-                         dtype=dtypedict, chunksize=10000)  # chunksize参数针对大批量插入，pandas会自动将数据拆分成chunksize大小的数据块进行批量插入;
-
-        self.mysql.exec(mysql_script.delete_table_common.format("block_basic where data_source = 'tdx'"))  # 删除表中记录
-        pd.io.sql.to_sql(dfg, 'block_basic', con=self.engine, if_exists='append', index=False, index_label="data_source, block_category, block_type, block_name, block_code",
-                         dtype=dtypedict, chunksize=10000)
-
-        #filename = config.tdx_csv_block + "group_block" + ".csv"
-        #dfg.to_csv(filename, index=False, mode='w', header=True, sep=',', encoding="utf_8_sig")
-        return True
+        mysql_script.df2db_update(data_source = data_source, block_basic_df = dfg, block_member_df = dfall)
+        return (len(dfg),len(dfall))
 
     #获取一段时间的1分钟数据，因为每次调用接口只能返回3天的分钟数据（240*3)，需要分多次调用
     #返回值：0没有提取到数据；1提取到数据

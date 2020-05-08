@@ -30,7 +30,8 @@ def create_df1():
     df = pd.DataFrame(data)
     print(df)
 
-    data_dict1 = {"block_type": "tdx.gn", "block_name": ["稀土", "特高压"]}
+    arr = ["稀土", "特高压"]
+    data_dict1 = {"block_type": "tdx.gn", "block_name": arr}
     df = pd.DataFrame(data_dict1)
     print(df)
 
@@ -199,4 +200,4 @@ def test7():
         df2.to_csv(filename, mode='w', header=True, sep=',')
 
 if __name__ == '__main__':
-    create_df4()
+    create_df1()
