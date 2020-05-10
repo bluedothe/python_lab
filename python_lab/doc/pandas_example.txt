@@ -47,6 +47,11 @@ df = df[(df['trade_date'] >= str(init_start_date)) & (df['trade_date'] <= str(in
 
 insertRow2_index = df4[df4.Bool == 3].index.tolist()  #根据条件，获取满足条件行的索引
 
+#去重复行
+df2 = df.drop_duplicates()   # 按全量字段去重, 保留第一个(默认)
+df3 = df.drop_duplicates(subset=['colA', 'colB'], keep='first');  # 按指定字段去重, 保留第一个
+df3 = df.drop_duplicates(keep='last')  #按全量字段去重, 保留最后一个
+
 #根据索引获取这两行的值
 insertRow2 = []
 for x in insertRow2_index:

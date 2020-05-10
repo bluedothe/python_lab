@@ -159,19 +159,19 @@ def record_log(paras, flag = 'all'):
         return id
 
 #更新block_basic和block_member两张表的数据
-def df2db_update(data_source, block_basic_df, block_member_df):
+def df2db_update(delete_condition, block_basic_df, block_member_df):
     dtypedict = {
         'data_source': NVARCHAR(length=16), 'block_category': NVARCHAR(length=16), 'block_type': NVARCHAR(length=16),
         'block_name': NVARCHAR(length=16), 'block_code': NVARCHAR(length=16), 'ts_code': NVARCHAR(length=16),
         'member_count': Integer, 'create_time': DateTime
     }
-    mysql.exec(delete_table_common.format(f"block_member where data_source = '{data_source}'"))  # 删除表中记录
-    # 该函数调用前，需要先将block_member表中的tdx相关的数据删掉
+    mysql.exec(delete_table_common.format(f"block_member where {delete_condition}"))  # 删除表中记录
+    # 该函数调用前，需要先将block_member表中的相关数据删掉
     pd.io.sql.to_sql(block_member_df, 'block_member', con=engine, if_exists='append', index=False,
                      index_label="data_source, block_category, block_type, block_name, block_code, ts_code",
                      dtype=dtypedict, chunksize=10000)  # chunksize参数针对大批量插入，pandas会自动将数据拆分成chunksize大小的数据块进行批量插入;
 
-    mysql.exec(delete_table_common.format(f"block_basic where data_source = '{data_source}'"))  # 删除表中记录
+    mysql.exec(delete_table_common.format(f"block_basic where {delete_condition}"))  # 删除表中记录
     pd.io.sql.to_sql(block_basic_df, 'block_basic', con=engine, if_exists='append', index=False,
                      index_label="data_source, block_category, block_type, block_name, block_code",
                      dtype=dtypedict, chunksize=10000)

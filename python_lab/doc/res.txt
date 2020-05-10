@@ -63,3 +63,11 @@ https://www.zhihu.com/question/20373441
 https://zhuanlan.zhihu.com/p/52661737
 https://www.cnblogs.com/dion-90/articles/8586556.html
 https://www.zhihu.com/question/20373441?sort=created
+
+baidu:python爬 同花顺
+问题解决】关于爬虫被封的处理方法（同花顺数据获取问题）
+https://blog.csdn.net/cy19980216/article/details/86647597
+python爬虫实战-抓取同花顺股票信息
+https://blog.csdn.net/qq_34246164/article/details/84931906
+同花顺财经-财务数据爬取思路详解-python爬虫
+https://www.jianshu.com/p/3c6952ad9219

@@ -75,7 +75,8 @@ class ThsDataCollect:
 
         print("--------更新每日股票附加数据完成------------")
 
-    def update_block_gn(self):
+    #更新板块数据
+    def update_block_data(self):
         data_type = 'ths_block_member'
         today = datetime.datetime.now()
         today_str = today.strftime('%Y-%m-%d')
@@ -90,24 +91,42 @@ class ThsDataCollect:
         if last_data_end_date >= end_date:  # 日志记录的
             print("今天的数据已经更新完成，不必重复执行!")
             return
-        result = self.thsHelper.get_block_gn()
+        result1 = self.thsHelper.get_block_gn()
+        result2 = self.thsHelper.get_block_dy()
+        result3 = self.thsHelper.get_block_zjhhy()
+        result4 = self.thsHelper.get_block_thshy()
+        block_count = 0
+        member_count = 0
+        if result1 is not None:
+            block_count = block_count + result1[0]
+            member_count = member_count + result1[1]
+        if result2 is not None:
+            block_count = block_count + result2[0]
+            member_count = member_count + result2[1]
+        if result3 is not None:
+            block_count = block_count + result3[0]
+            member_count = member_count + result3[1]
+        if result4 is not None:
+            block_count = block_count + result4[0]
+            member_count = member_count + result4[1]
 
-        #block_count = re
-        if result is not None :
+        if block_count != 0 or member_count != 0 :
             now = time.strftime("%Y-%m-%d %H:%M:%S")  # now是字符串
             today = time.strftime("%Y-%m-%d")
             paras = {"data_type": data_type, "data_name": "ths板块成分股", "data_source": "ths", "collect_start_time": now,
                      "data_end_date": today, "collect_end_time": now,
-                     "collect_log": f"完成{data_type}的数据采集,更新板块信息{result[0]}条，更新板块成分数据{result[1]}条",
+                     "collect_log": f"完成{data_type}的数据采集,更新板块信息{block_count}条，更新板块成分数据{block_count}条",
                      "collect_status": "S"}
             print(paras)
             mysql_script.record_log(paras)
         else:
-            print("=======没有要更新的板块成分股========")
+            print("=======没有要更新的板块数据========")
 
     def batch_execute_everyday(self):
         self.update_day_attach()
+        self.update_block_data()
 
 if __name__ == '__main__':
     ths = ThsDataCollect()
-    ths.update_day_attach()
+    #ths.update_day_attach()
+    ths.update_block_data()

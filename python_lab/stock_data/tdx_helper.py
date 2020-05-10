@@ -253,8 +253,8 @@ class TdxHelper:
         dfg = dfall.groupby(by=['data_source', 'block_category', 'block_type', 'block_name', 'block_code'],as_index=False).count()  # 分组求每组数量
         dfg.rename(columns={'ts_code': 'member_count'}, inplace=True)  #ts_code列数值为汇总值，需要重命名
         dfg['create_time'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))  #create_time列数值为汇总值，需要重新赋值
-
-        mysql_script.df2db_update(data_source = data_source, block_basic_df = dfg, block_member_df = dfall)
+        delete_condition = f"data_source = '{data_source}'"
+        mysql_script.df2db_update(delete_condition = delete_condition, block_basic_df = dfg, block_member_df = dfall)
         return (len(dfg),len(dfall))
 
     #获取一段时间的1分钟数据，因为每次调用接口只能返回3天的分钟数据（240*3)，需要分多次调用
