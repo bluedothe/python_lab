@@ -368,14 +368,15 @@ class ThsHelper:
             keep='first');  # 按指定字段去重, 保留第一个
 
         delete_condition = f"block_category = '{block_category}'"
-        mysql_script.df2db_update(delete_condition=delete_condition, block_basic_df=block_info_df, block_member_df=block_member_df)
+        mysql_script.df2db_update(delete_condition=delete_condition, block_basic_df=block_info_df,
+                                  block_member_df=block_member_df)
         return (len(block_info_df), len(block_member_df))
 
-    #获取每只股票的附加数据并写入csv
+    # 获取每只股票的附加数据并写入csv
     # 获取个股每日涨跌幅、涨跌、换手率、量比、振幅、流通股、流通市值、市盈率
-    def get_day_attach(self, trade_date = ""):
+    def get_day_attach(self, trade_date=""):
         url = "http://q.10jqka.com.cn/index/index/board/all/field/zdf/order/desc/page/{}/ajax/1/"
-        if len(trade_date) == 0: trade_date = time.strftime("%Y%m%d")  #如果没指定交易日期则用当天日期
+        if len(trade_date) == 0: trade_date = time.strftime("%Y%m%d")  # 如果没指定交易日期则用当天日期
 
         html = self.get_page_bs(url.format(1))
         if html is None: return 0
