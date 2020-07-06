@@ -278,7 +278,10 @@ class TushareDataCollect:
                     break
 
     #删除文件最后一行
-    def delete_last_row(self,full_path,filename=""):
+    #文件需要满足的条件：1 文件最后修改时间，2 最后一行的数据长度，该值取一行长度的1.1倍，3 要删除行的开头字符标志
+    #该方法需要从后往前计算行数，比较麻烦，而且代码有问题，不能正常运行
+    def delete_last_row_old_bad(self,full_path,filename=""):
+        print("文件名为: %s" % (full_path))
         df = pd.read_csv(full_path)
         filesize = os.path.getsize(full_path)  # 文件字节数
         print("filesize为: %s" % (filesize))
@@ -286,18 +289,18 @@ class TushareDataCollect:
         df = df.astype(str)
         mtime = os.stat(full_path).st_mtime
         file_modify_time = time.strftime('%Y-%m-%d', time.localtime(mtime))
-        if file_modify_time == "2020-04-13":
+        if file_modify_time != "1920-04-13":   #文件需要满足的条件：1 文件最后修改时间
             csv_file = open(full_path, "rb+")
             print("csv_file.tell为: %s" % (csv_file.tell()))
-            csv_file.seek(-400, os.SEEK_END)  # seek是光标移到
+            csv_file.seek(-360, os.SEEK_END)  # seek是光标移到   #文件需要满足的条件：2 最后一行的数据长度，该值取一行长度的1.1倍
             lines = csv_file.readlines()
             lines_count = len(lines)
             print("读取的行数：%s" % (lines_count))
             print("csv_file.tell为: %s" % (csv_file.tell()))
-            if lines_count >= 2:
-                csv_file.seek(-400, os.SEEK_END)  # seek是光标移到
+            if lines_count >= 1:
+                csv_file.seek(-360, os.SEEK_END)  # seek是光标移到
                 print("csv_file.tell为: %s" % (csv_file.tell()))
-                for i in range(lines_count-1):
+                for i in range(lines_count):
                     print("i:", i)
                     line = csv_file.readline()
                     print("读取的数据为: %s" % (line))
@@ -305,7 +308,7 @@ class TushareDataCollect:
 
                     line_utf8 = line.decode(encoding="utf-8")
                     print("行{}：".format(i+1), line_utf8)
-                    if line_utf8[0:2] == "0,":
+                    if line_utf8[17:25] == "20200106":           #文件需要满足的条件：3 要删除行的开头字符标志
                         print("该行要删除: %s" % (line_utf8))
 
                 # file.truncate([size])从文件的首行首字符开始截断，截断文件为 size 个字符，无 size 表示从当前位置截断；截断之后后面的所有字符被删除，其中 windows 系统下的换行代表2个字符大小。
@@ -314,9 +317,41 @@ class TushareDataCollect:
         else:
             print("no update file")
 
+    # 删除文件最后一行
+    # 文件需要满足的条件：1 文件大小不为0；2文件最后修改时间；3 要删除行包含的关键字
+    def delete_last_row(self, full_path, filename=""):
+        print("文件名为: %s" % (full_path))
+        filesize = os.path.getsize(full_path)  # 文件字节数
+        print("filesize为: %s" % (filesize))
+        if filesize == 0: return          # 文件需要满足的条件： 1 文件大小不为0
+        df = pd.read_csv(full_path)
+        df = df.astype(str)
+        mtime = os.stat(full_path).st_mtime
+        file_modify_time = time.strftime('%Y-%m-%d', time.localtime(mtime))
+        if file_modify_time != "1920-04-13":  # 文件需要满足的条件：2 文件最后修改时间
+            with open(full_path, "rb+") as csv_file:
+                lines = csv_file.readlines()  # 读取所有行
+                lines_count = len(lines)
+                #print("读取的行数：%s" % (lines_count))
+                last_line = lines[-1]  # 取最后一行
+                #print("最后一行内容：%s" % (last_line))
+                #print("关键字1：%s" % (last_line[17:25]))
+                line_utf8 = last_line.decode(encoding="utf-8")
+                #print("关键字2：%s" % (line_utf8[17:25]))
+                if line_utf8[17:25] == "20200106":  # 文件需要满足的条件：3 要删除行包含的关键字
+                    #print("该行要删除: %s" % (line_utf8))
+                    csv_file.seek(-1 * len(line_utf8), os.SEEK_END)
+                    csv_file.truncate()
+                    #下面三行语句也可以实现删除最后一行，原理是把最后一行按字符逐个删除
+                    #for i in range(len(line_utf8) + 2):
+                    #    csv_file.seek(-1, os.SEEK_END)
+                    #    csv_file.truncate()
+                csv_file.close()
+
+
     @printHelper.time_this_function
     def batch_delete_last_row(self):
-        file_util.traversal_dir("E:/database/csv/tushare/day",self.delete_last_row)
+        file_util.traversal_dir("E:/database/csv/tushare/day_test",self.delete_last_row)
 
     #更新后文件中多了换行，有问题
     def update_value(self):
@@ -365,7 +400,7 @@ class TushareDataCollect:
 if __name__ == '__main__':
     dc = TushareDataCollect()
     #dc.get_stock_basic_pandas()
-    dc.get_stock_basic_one()
+    #dc.get_stock_basic_one()
     #dc.get_stock_history()
     #dc.get_stock_history_pro()
     #dc.get_day_index_all()
@@ -378,5 +413,5 @@ if __name__ == '__main__':
     # dc.test_record_log()
     # dc.test()
     #dc.delete_last_row("E:/database/csv/tushare/day/000001.SZ.csv")
-    #dc.batch_delete_last_row()
+    dc.batch_delete_last_row()
 
