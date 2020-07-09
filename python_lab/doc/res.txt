@@ -71,3 +71,6 @@ python爬虫实战-抓取同花顺股票信息
 https://blog.csdn.net/qq_34246164/article/details/84931906
 同花顺财经-财务数据爬取思路详解-python爬虫
 https://www.jianshu.com/p/3c6952ad9219
+
+Pygame是一个利用SDL库的写就的游戏库
+http://www.pygame.org/docs/ref/mixer.html
