@@ -124,7 +124,8 @@ def test8(full_path, file):
 def test9():
     for i in range(5,0,-1):
         print(i)
-    for i in range(0,1):
+    print("---")
+    for i in range(3):
         print(i)
 
 def test10():
@@ -136,4 +137,4 @@ def test11():
 
 if __name__ == '__main__':
     #file_util.traversal_dir("D:/Temp/android/HelloWorld/res",test8)
-    test11()
+    test9()

@@ -11,7 +11,7 @@ __copyright__ = "Copyright 2018-2020"
 from stock_data.tushare_data_collect import TushareDataCollect
 from stock_data.tdx_data_collect import TdxDataCollect
 from stock_data.ths_data_collect import ThsDataCollect
-
+from tool import kit
 class DataCollect:
     def __init__(self):
         self.tushare_dc = TushareDataCollect()
@@ -25,6 +25,7 @@ class DataCollect:
         self.tdx_dc.tdx_close_connect()
 
         self.ths_dc.batch_execute_everyday()  #1追加日线附加数据 2更新板块数据以及成分数据
+        kit.alarm(3)
 
 if __name__ == '__main__':
     dc = DataCollect()
