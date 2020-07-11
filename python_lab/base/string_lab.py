@@ -80,6 +80,12 @@ def str_join():
 def path_join():
     print(os.path.join('/hello/','good/date','datbody','bac'))
 
+#字符串分割与拼接，将分隔符由逗号换位斜杠
+def str_join():
+    mStr = '192.168.1.1,192.168.1.2,192.168.1.3'
+    strList = mStr.split(',')
+    newStr = '/'.join(strList)
+
 #字符串分割
 def str_split():
     str = 'http://q.10jqka.com.cn/zjhhy/detail/code/I/'

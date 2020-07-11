@@ -6,6 +6,7 @@
     date: 2020/3/5
     selenium模拟浏览器操作，可以用于自动化测试，或者爬取js中的数据
     使用前需要给浏览器安装插件，google浏览器的插件chromedriver.exe放到anconna目录中即可
+    google插件下载地址：http://chromedriver.storage.googleapis.com/index.html
     selenium学习资料：https://blog.csdn.net/One_of_them/article/details/82560880
                     https://www.jianshu.com/p/1531e12f8852
 '''
