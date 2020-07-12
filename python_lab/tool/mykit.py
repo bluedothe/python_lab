@@ -70,7 +70,7 @@ def get_oxford_phon(word):
     return result
 
 
-#抓取有道d音标
+#抓取有道音标
 def get_youdao_phon(word):
     url = 'http://dict.youdao.com/search?q=' + word + '&keyfrom=dict.index'
     response = request.urlopen(url)
@@ -86,13 +86,31 @@ def get_youdao_phon(word):
         result = result + phon
         if result != "": break
     print(result)
-    example_html = soup.select("div.examples")
+    example_html = soup.select("div.examples")  #div.examples > p
     print(example_html)
     return result
 
+#抓取百度音标
+def get_baidu_phon(word):
+    url = 'https://fanyi.baidu.com/#en/zh/' + word
+    response = request.urlopen(url)
+    html = response.read()
+    soup = BeautifulSoup(html)
+    print(soup)  #<span class="phonetic-transcription"> <span>英</span> <b>[ˈriːsnt]</b>  <a href="javascript:void(0);" data-sound-lan="uk&amp;lock" data-sound-text="recent" class="op-sound"> <span class="icon-sound sound-btn"></span> </a> <a href="javascript:void(0);" data-sound-lan="uk&amp;lock" data-sound-text="recent" data-hover-tip-text="复读" class="op-repeat data-hover-tip"> <span class="icon-repeat sound-btn"></span> </a>  </span>
+    phon_html = soup.select("span.phonetic-transcription > b")
+    print(phon_html)
+    result = ''
+    if phon_html is None: return result
+    for n in phon_html:
+        phon = n.get_text()
+        result = result + phon
+        if result != "": break
+    print(result)
+    return result
 
 if __name__ == '__main__':
     filename = "D:/Temp/测试文档.docx"
     #read_file(filename)
     #get_oxford_phon("recent")
-    get_youdao_phon("attack")
+    get_baidu_phon("attack")
+    #get_youdao_phon("attack")

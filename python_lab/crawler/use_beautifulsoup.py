@@ -189,6 +189,8 @@ def test8():
     print(bs.select('#u1'))  #通过id查找
     print(bs.select('div .bri'))  #组合查找
     print(bs.select('a[class="bri"]'))  #属性查找
+    print(bs.select('a.bri'))  # 属性查找,这个写法简单实用
+    print(bs.select('a.bri > p'))  # 属性查找,这个写法简单实用
     print(bs.select('a[href="http://tieba.baidu.com"]'))  #属性查找
     t_list = bs.select("head > title")  #直接子标签查找
     print(t_list)
