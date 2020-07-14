@@ -8,14 +8,13 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
-from pytdx.reader import TdxDailyBarReader,TdxMinBarReader,TdxLCMinBarReader, TdxFileNotFoundException,BlockReader
+from pytdx.reader import TdxDailyBarReader,TdxMinBarReader,TdxLCMinBarReader, BlockReader
 import os
 import pandas as pd
 from struct import unpack
 import chardet
-import numpy as np
 
-from stock_data import config
+from config import config
 from tool import datatime_util
 
 class TdxLocalHelper:
@@ -200,4 +199,4 @@ class TdxLocalHelper:
 
 if __name__ == '__main__':
     tdx = TdxLocalHelper()
-    tdx.read_tdx_local_minline_simple(config.tdx_local_sz_minline1 + "sz000001.lc1","sz000001.lc1")
+    tdx.read_tdx_local_minline_simple(config.tdx_local_sz_minline1 + "sz000001.lc1", "sz000001.lc1")

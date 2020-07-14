@@ -37,6 +37,8 @@ tdx_csv_minline1_simple = tdx_csv_home + "minline1simple/"
 tdx_csv_home = "E:/database/csv/ths/"
 ths_csv_day_attach = tdx_csv_home + "day_attach/"   #日线数据附加信息：涨跌幅、涨跌、换手率、量比、振幅、流通股、流通市值、市盈率
 
+sample_file_path = "E:/python/projects/python_lab/sample_file"
+
 mysql_host = "localhost"
 mysql_username = "root"
 mysql_dbname = "stock"

@@ -1,3 +1,7 @@
+**/__pycache__
+*.pyc
+*.egg-info
+
 /crawler/pic_down/
 /crawler/file_down/
 /crawler/music_down/
@@ -5,5 +9,5 @@
 /quantitative_trading/xuangubao_file/
 /crawler/toutiao_file/
 /quantitative_trading/ths_file/
-/stock_data/bluedothe.py
+/config/bluedothe.py
 /.idea/

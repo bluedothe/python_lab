@@ -18,8 +18,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.types import NVARCHAR, Float, Integer, DateTime, BigInteger
 
 from db.mysqlHelper import mysqlHelper
-from stock_data import bluedothe
-from stock_data import config
+from config import config, bluedothe
 from tool import printHelper
 
 class TushareHelper:

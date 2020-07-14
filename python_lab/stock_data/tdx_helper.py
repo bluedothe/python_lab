@@ -13,18 +13,12 @@ import os
 import pandas as pd
 
 from pytdx.hq import TdxHq_API,TDXParams
-from pytdx.exhq import TdxExHq_API
-from pytdx.config.hosts import hq_hosts
 from sqlalchemy import create_engine
-from sqlalchemy.types import NVARCHAR, Float, Integer, DateTime, BigInteger
-import datetime,time
+import time
 
 from db.mysqlHelper import mysqlHelper
-from stock_data import bluedothe
-from stock_data import config
-from tool import printHelper
+from config import config, bluedothe
 from tool import datatime_util
-from tool import file_util
 from stock_data import mysql_script
 
 class TdxHelper:

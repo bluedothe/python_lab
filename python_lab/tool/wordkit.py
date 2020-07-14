@@ -45,7 +45,7 @@ def add_phon(filename):
     for p in doc.paragraphs:
         line_list = (p.text).split(' ')
         word = line_list[0]
-        sign = get_oxford_phon(word)
+        sign = get_youdao_phon(word)
         line_list[0] = word + ' ' + sign
         print(line_list[0])
         p.text = ' '.join(line_list)
@@ -90,7 +90,7 @@ def get_youdao_phon(word):
     print(example_html)
     return result
 
-#抓取百度音标
+#抓取百度音标，有问题，待调试
 def get_baidu_phon(word):
     url = 'https://fanyi.baidu.com/#en/zh/' + word
     response = request.urlopen(url)
@@ -109,8 +109,9 @@ def get_baidu_phon(word):
     return result
 
 if __name__ == '__main__':
-    filename = "D:/Temp/测试文档.docx"
+    filename = "G:/english/word/短单词/六个字母的英文单词带音标.docx"
     #read_file(filename)
     #get_oxford_phon("recent")
-    get_baidu_phon("attack")
+    #get_baidu_phon("attack")
     #get_youdao_phon("attack")
+    add_phon(filename)

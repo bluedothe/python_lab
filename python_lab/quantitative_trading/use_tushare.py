@@ -18,7 +18,7 @@ import time
 import pymysql
 import pandas as pd
 
-from stock_data import bluedothe
+from config import bluedothe
 
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"

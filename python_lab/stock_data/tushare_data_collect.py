@@ -15,11 +15,9 @@ import datetime
 import time
 import pandas as pd
 import chardet
-import csv
 from sqlalchemy import create_engine
 from db.mysqlHelper import mysqlHelper
-from stock_data import bluedothe
-from stock_data import config
+from config import config, bluedothe
 from stock_data.tushare_helper import TushareHelper
 from stock_data import mysql_script
 from tool import printHelper

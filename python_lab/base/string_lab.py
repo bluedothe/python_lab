@@ -95,5 +95,18 @@ def str_split():
     print("1/12".split('/')[-1])
     print("abcdt"[2])
 
+#字符串前面加u,r,b的含义
+def str_urb():
+    #前面加u,字符串以 Unicode 格式 进行编码，一般用在中文字符串前面，防止因为源码储存格式问题，导致再次使用时出现乱码。
+    str1 = u"我是含有中文字符组成的字符串。"
+
+    #前面加r，去掉反斜杠的转义机制,常用于正则表达式，对应着re模块
+    str2 = r"\n\n\n\n"
+
+    #b前缀表示：后面字符串是bytes 类型，用于网络编程中，服务器和浏览器只认bytes 类型数据，如：send 函数的参数和 recv 函数的返回值都是 bytes 类型
+    #在 Python3 中，bytes 和 str 的互相转换方式如下
+    str.encode('utf-8')
+    bytes.decode('utf-8')
+
 if __name__ == '__main__':
     str_split()

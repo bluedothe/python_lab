@@ -10,21 +10,16 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
-import os
 from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import requests
 import re
-from lxml import etree
 import pandas as pd
-import html5lib
 import time
 
 from stock_data import mysql_script
-from db.mysqlHelper import mysqlHelper
-from stock_data import bluedothe
-from stock_data import config
+from config import config
 from tool import file_util
 
 class ThsHelper:

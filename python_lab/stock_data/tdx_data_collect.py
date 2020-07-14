@@ -12,12 +12,9 @@ import os
 import datetime
 import time
 import pandas as pd
-import chardet
-import csv
 from sqlalchemy import create_engine
 from db.mysqlHelper import mysqlHelper
-from stock_data import bluedothe
-from stock_data import config
+from config import config, bluedothe
 from stock_data.tdx_helper import TdxHelper
 from stock_data.tdx_local_helper import TdxLocalHelper
 from stock_data import mysql_script

@@ -11,10 +11,9 @@ __copyright__ = "Copyright 2018-2020"
 
 import pandas as pd
 from db.mysqlHelper import mysqlHelper
-from stock_data import bluedothe
-from stock_data import config
+from config import config, bluedothe
 from sqlalchemy import create_engine
-from sqlalchemy.types import NVARCHAR, Float, Integer, DateTime, BigInteger
+from sqlalchemy.types import NVARCHAR, Integer, DateTime
 
 mysql = mysqlHelper(config.mysql_host, config.mysql_username, bluedothe.mysql_password, config.mysql_dbname)
 # pandas的mysql对象

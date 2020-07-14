@@ -8,19 +8,15 @@
 __author__ = "Bigcard"
 __copyright__ = "Copyright 2018-2020"
 
-import os
 import datetime
 import time
 import pandas as pd
 from sqlalchemy import create_engine
 
 from db.mysqlHelper import mysqlHelper
-from stock_data import bluedothe
-from stock_data import config
+from config import config, bluedothe
 from stock_data.ths_helper import ThsHelper
 from stock_data import mysql_script
-from tool import printHelper
-from tool import file_util
 from tool import datatime_util
 
 class ThsDataCollect:
