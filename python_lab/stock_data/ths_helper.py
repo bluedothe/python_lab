@@ -431,6 +431,7 @@ if __name__ == '__main__':
     ths = ThsHelper()
     #ths.get_block_thshy()
     #ths.get_block_member_thshy('881129')
-    list = ths.get_block_member("ths.thshy",'881129')
+    #list = ths.get_block_member("ths.thshy",'881129')
+    list = ths.get_block_thshy()
     print(list)
     print(len(list))

@@ -74,3 +74,24 @@ https://www.jianshu.com/p/3c6952ad9219
 
 Pygame是一个利用SDL库的写就的游戏库
 http://www.pygame.org/docs/ref/mixer.html
+
+20200715：爬虫
+https://zhuanlan.zhihu.com/p/139306302  #execjs使用
+https://segmentfault.com/q/1010000020123655   #execjs使用
+https://www.jianshu.com/p/3c6952ad9219;   #需要处理js
+http://www.360doc.com/content/20/0219/00/36832794_893043966.shtml
+https://blog.csdn.net/CY19980216/article/details/86647597?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-7-86647597.nonecase
+https://blog.csdn.net/qq_36936730/article/details/104750041?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-5-104750041.nonecase
+https://blog.csdn.net/weixin_44510363/article/details/105408092?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-2-105408092.nonecase
+https://blog.csdn.net/HD920818/article/details/101379804?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-15-101379804.nonecase
+https://blog.csdn.net/eryk86/article/details/104338991?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-4-104338991.nonecase
+https://blog.csdn.net/qq_42257125/article/details/99635959?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-3-99635959.nonecase
+https://blog.csdn.net/qq_34246164/article/details/84931906?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-2-84931906.nonecase
+https://www.it610.com/article/1279948547130671104.htm
+https://blog.csdn.net/qq_34246164/article/details/84931906
+https://www.jianshu.com/p/13381aac9245
+https://blog.csdn.net/Scofield971031/article/details/88920934
+https://www.jb51.net/article/169322.htm
+https://www.php.cn/python-tutorials-410977.html     #Web kit
+
+
