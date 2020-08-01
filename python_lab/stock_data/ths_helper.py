@@ -46,11 +46,29 @@ class ThsHelper:
 
         self.data_source = "ths"
 
+    def get_headers(self):
+        options = webdriver.ChromeOptions()
+        options.add_argument('headless')
+        browser = webdriver.Chrome(chrome_options=options)
+        url = "http://q.10jqka.com.cn/thshy/"
+        browser.get(url)
+        # 获取cookie列表
+        cookies = browser.get_cookies()
+        browser.close()
+        cookie = cookies[0]['value']
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
+            'Referer': 'http://q.10jqka.com.cn/thshy/detail',
+            'Cookie': 'v={}'.format(self.cookie)
+        }
+        return headers
+
 
     # 获取网页详情页
     def get_page_bs(self, url):
         try:
-            response = requests.get(url, headers=self.headers)
+            response = requests.get(url, headers=self.get_headers())
             if response.status_code == 200:
                 html = response.text.encode('utf-8')
                 bs = BeautifulSoup(html, "html.parser")  #lxml   html
@@ -90,6 +108,7 @@ class ThsHelper:
         page_no = 0
         while True:
             page_no = page_no + 1
+            print('begin page_no:', page_no)
             if page_no > page_sum: break
             bs = self.get_page_bs(url.format(page_no))
             if bs is None:
@@ -99,10 +118,13 @@ class ThsHelper:
                 print("tbody is None,page_no:",page_no)
                 continue
             list = bs.find('tbody').find_all("a", target="_blank", href=re.compile("q.10jqka.com.cn/thshy"))
+            if list is None:
+                print("list is None,page_no:", page_no)
+                continue
             if len(list) == 0:
                 print("list==0, page_no: ", page_no)
                 break
-            print('page_no:',page_no)
+            #print('page_no:',page_no)
 
             for line in list:
                 href = str((line.get('href')))
@@ -110,11 +132,11 @@ class ThsHelper:
                 block_code = href.split("/")[-2]
                 print(block_code,block_name)
 
-                ###ts_codes = self.get_block_member(block_category, block_code)
-                ###block_info.append({"data_source": self.data_source, "block_category": block_category, "block_type": block_type,"block_name": block_name,"block_code": block_code, "member_count": len(ts_codes)})
+                ts_codes = self.get_block_member(block_category, block_code)
+                block_info.append({"data_source": self.data_source, "block_category": block_category, "block_type": block_type,"block_name": block_name,"block_code": block_code, "member_count": len(ts_codes)})
 
-                ###for ts_code in ts_codes:block_member.append({"data_source": self.data_source, "block_category": block_category, "block_type": block_type,"block_name": block_name, "block_code": block_code, "ts_code": ts_code})
-        ###return self.save_df(block_category, block_info, block_member)
+                for ts_code in ts_codes:block_member.append({"data_source": self.data_source, "block_category": block_category, "block_type": block_type,"block_name": block_name, "block_code": block_code, "ts_code": ts_code})
+        return self.save_df(block_category, block_info, block_member)
 
     # 同花顺行业成分股数据
     def get_block_member_thshy(self,block_code):
@@ -414,8 +436,7 @@ class ThsHelper:
         block_info_df['create_time'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         # block_info_df = block_info_df[['data_source','block_category','block_type','block_name','block_code','member_count','create_time']]
         block_info_df = block_info_df.drop_duplicates(
-            subset=['data_source', 'block_category', 'block_type', 'block_name', 'block_code'],
-            keep='first');  # 按指定字段去重, 保留第一个
+            subset=['data_source', 'block_category', 'block_type', 'block_name', 'block_code'], keep='first');  # 按指定字段去重, 保留第一个
         block_member_df = pd.DataFrame(block_member)
         block_member_df['create_time'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
         # block_member_df = block_member_df[['data_source', 'block_category', 'block_type', 'block_name', 'block_code', 'ts_code','create_time']]
@@ -432,6 +453,7 @@ if __name__ == '__main__':
     #ths.get_block_thshy()
     #ths.get_block_member_thshy('881129')
     #list = ths.get_block_member("ths.thshy",'881129')
+    #list = ths.get_block_gn()
     list = ths.get_block_thshy()
-    print(list)
-    print(len(list))
+    print(list[0])
+    print(list[1])

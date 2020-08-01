@@ -39,7 +39,7 @@ class ThsDataCollect:
         self.engine = create_engine(
             f'mysql+mysqlconnector://{config.mysql_username}:{bluedothe.mysql_password}@{config.mysql_host}/{config.mysql_dbname}?charset=utf8')
 
-    #追加日线附加数据
+    #追加日线附加数据,只能获取当天的数据，不能后补
     def update_day_attach(self, trade_date = ""):
         data_type = 'ths_day_attach'
         today = datetime.datetime.now()

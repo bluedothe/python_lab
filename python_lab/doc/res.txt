@@ -86,12 +86,14 @@ https://blog.csdn.net/weixin_44510363/article/details/105408092?utm_medium=distr
 https://blog.csdn.net/HD920818/article/details/101379804?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-15-101379804.nonecase
 https://blog.csdn.net/eryk86/article/details/104338991?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-4-104338991.nonecase
 https://blog.csdn.net/qq_42257125/article/details/99635959?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-3-99635959.nonecase
+
+Java爬取同花顺股票数据:https://www.cnblogs.com/chinaxieshuai/p/12551905.html
 https://blog.csdn.net/qq_34246164/article/details/84931906?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~first_rank_v2~rank_v25-2-84931906.nonecase
 https://www.it610.com/article/1279948547130671104.htm
-https://blog.csdn.net/qq_34246164/article/details/84931906
-https://www.jianshu.com/p/13381aac9245
 https://blog.csdn.net/Scofield971031/article/details/88920934
 https://www.jb51.net/article/169322.htm
 https://www.php.cn/python-tutorials-410977.html     #Web kit
+
+cv2使用教程：https://blog.csdn.net/RNG_uzi_/article/details/90034485   图像处理
 
 
